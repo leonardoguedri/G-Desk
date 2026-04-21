@@ -1,0 +1,90 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centraliza verticalmente */
+  align-items: center;
+  padding: 20px;
+
+  background: radial-gradient(
+    circle at center,
+    #2d3963 0%,
+    #050912 100%
+  );
+
+  color: white;
+  text-align: center; /* centraliza textos */
+}
+
+/* Header */
+.login-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.logo-img {
+  width: 50px;
+  height: auto;
+  margin-left: 25px;
+}
+
+/* Títulos */
+.login-container h1 {
+  margin: 1px 0 -15px 25px;
+  font-size: 26px;
+}
+
+.login-container h5 {
+  margin-bottom: 30px;
+  font-weight: 400;
+  opacity: 0.85;
+  margin-left: 25px;
+}
+
+/* Formulário */
+.login-form {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Inputs */
+.input-group input {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+}
+
+/* Botão */
+.btn-login {
+  width: 108%; /* 🔥 ESSA LINHA resolve */
+  margin-top: 10px;
+  padding: 14px;
+  background: white;
+  color: #1a41b0;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* Texto inferior */
+.footer-text {
+  margin-top: 20px;
+  font-size: 13px;
+  opacity: 0.8;
+  color: #8790aa;
+    margin: 15px 0 2px 25px;
+
+}

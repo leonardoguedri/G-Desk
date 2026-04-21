@@ -1,0 +1,23 @@
+<div class="paginas-container">
+  <h2>Páginas Externas</h2>
+
+  <div
+    class="categoria"
+    *ngFor="let categoria of categorias()"
+  >
+    <h3>{{ categoria }}</h3>
+
+    <div class="cards">
+      <div
+        class="card"
+        *ngFor="let link of linksPorCategoria(categoria)"
+        (click)="abrir(link.url)"
+      >
+        <h4>{{ link.titulo }}</h4>
+        <p>{{ link.descricao }}</p>
+        <span>Abrir ↗</span>
+      </div>
+    </div>
+  </div>
+</div>
+

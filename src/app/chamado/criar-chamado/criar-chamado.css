@@ -1,0 +1,158 @@
+/* RESET BÁSICO (evita bugs de layout) */
+* {
+  box-sizing: border-box;
+}
+
+/* CONTAINER */
+.chamado-container {
+  padding: 40px;
+  background: #f4f6f9;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* TÍTULO */
+h2 {
+  margin-bottom: 25px;
+}
+
+/* CARDS */
+.card {
+  background: #ffffff;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* TÍTULOS DOS CARDS */
+.card h3 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+/* GRID PADRÃO */
+.grid-2,
+.grid-3,
+.grid-4 {
+  display: grid;
+  gap: 20px;
+}
+
+/* DEFINIÇÃO DE COLUNAS */
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* RESPONSIVO (MUITO IMPORTANTE) */
+@media (max-width: 1024px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CAMPOS */
+label {
+  font-weight: 600;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+/* EFEITO HOVER */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+/* TEXTAREA */
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* BOTÕES */
+.acoes {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-salvar {
+  background: #27ae60;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-salvar:hover {
+  background: #219150;
+}
+
+/* BOTÃO OBSERVAÇÃO */
+.btn-interno {
+  margin-top: 15px;
+  background: #2980b9;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-interno:hover {
+  background: #1f6692;
+}
+
+/* HISTÓRICO */
+.historico {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.historico strong {
+  display: block;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.historico p {
+  margin: 5px 0 15px;
+  font-size: 14px;
+}

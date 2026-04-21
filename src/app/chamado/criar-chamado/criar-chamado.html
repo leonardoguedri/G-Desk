@@ -1,0 +1,173 @@
+<div class="chamado-container">
+
+  <h2>📋 Abertura de Chamado</h2>
+
+  <div class="alerta sucesso" *ngIf="sucesso">
+    ✅ Chamado criado com sucesso! Redirecionando...
+  </div>
+
+  <div class="alerta erro" *ngIf="erro">
+    ❌ {{ erro }}
+  </div>
+
+  <!-- DADOS DE ABERTURA -->
+  <div class="card">
+    <h3>Dados de Abertura</h3>
+    <div class="grid-3">
+      <div>
+        <label>Data</label>
+        <input type="text" [value]="dataAtual" readonly>
+      </div>
+      <div>
+        <label>Colaborador</label>
+        <input type="text" [value]="usuarioLogado.nome" readonly>
+      </div>
+      <div>
+        <label>Setor</label>
+        <input type="text" [value]="usuarioLogado.setor || '-'" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOLICITANTE -->
+  <div class="card">
+    <h3>Solicitante</h3>
+    <div class="grid-3">
+      <div>
+        <label>Nome</label>
+        <input type="text" [(ngModel)]="form.solicitante_nome">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" [(ngModel)]="form.solicitante_email">
+      </div>
+      <div>
+        <label>Telefone</label>
+        <input type="text" [(ngModel)]="form.solicitante_telefone">
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top: 20px;">
+      <div>
+        <label>Instituição</label>
+        <select [(ngModel)]="form.instituicao">
+          <option value="">Selecione</option>
+          <option *ngFor="let i of instituicoes" [value]="i.nome">
+            {{ i.nome }} — {{ i.cidade }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label>Unidade</label>
+        <input type="text" [(ngModel)]="form.unidade"
+          placeholder="Ex: SEDE, Regional...">
+      </div>
+    </div>
+  </div>
+
+  <!-- IDENTIFICAÇÃO DA SOLICITAÇÃO -->
+  <div class="card">
+    <h3>Identificação da Solicitação</h3>
+    <div class="grid-3">
+      <div>
+        <label>Categoria</label>
+        <select (change)="onCategoriaChange($event)">
+          <option value="">Selecione</option>
+          <option *ngFor="let c of categorias" [value]="c.nome">
+            {{ c.nome }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label>Prioridade</label>
+        <select [(ngModel)]="form.prioridade">
+          <option>Baixa</option>
+          <option>Normal</option>
+          <option>Alta</option>
+        </select>
+      </div>
+      <div>
+        <label>Setor Destino</label>
+        <select [(ngModel)]="form.setor_destino">
+          <option value="">Selecione</option>
+          <option *ngFor="let s of setores" [value]="s.nome">
+            {{ s.nome }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLA -->
+  <div class="card">
+    <h3>SLA (Automático)</h3>
+    <div class="grid-2">
+      <div>
+        <label>Tempo de Resposta</label>
+        <input type="text"
+          [value]="sla.resposta || 'Selecione uma categoria'"
+          readonly>
+      </div>
+      <div>
+        <label>Tempo de Solução</label>
+        <input type="text"
+          [value]="sla.solucao || 'Selecione uma categoria'"
+          readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- TÍTULO E DESCRIÇÃO -->
+  <div class="card">
+    <h3>Título e Descrição</h3>
+    <div style="margin-bottom: 15px;">
+      <label>Título</label>
+      <input type="text" [(ngModel)]="form.titulo">
+    </div>
+    <div>
+      <label>Descrição</label>
+      <textarea rows="5" [(ngModel)]="form.descricao"></textarea>
+    </div>
+  </div>
+
+  <!-- OUTRAS INFORMAÇÕES -->
+  <div class="card">
+    <h3>Outras Informações</h3>
+    <div class="grid-2">
+      <div>
+        <label>Canal</label>
+        <select [(ngModel)]="form.canal">
+          <option value="">Selecione</option>
+          <option>Email</option>
+          <option>Telefone</option>
+          <option>Sistema</option>
+          <option>Presencial</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBSERVAÇÃO INTERNA -->
+  <div class="card">
+    <h3>Observações Internas</h3>
+    <textarea rows="4" [(ngModel)]="novaObservacao"
+      placeholder="Digite uma observação interna...">
+    </textarea>
+    <button class="btn-interno" (click)="enviarObservacao()">
+      Enviar Observação
+    </button>
+    <div class="historico">
+      <div *ngFor="let obs of observacoes">
+        <strong>{{ obs.usuario }}</strong> — {{ obs.data }}
+        <p>{{ obs.texto }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- AÇÕES -->
+  <div class="acoes">
+    <button class="btn-salvar" (click)="abrirChamado()" [disabled]="loading">
+      {{ loading ? 'Salvando...' : 'Abrir Chamado' }}
+    </button>
+  </div>
+
+</div>

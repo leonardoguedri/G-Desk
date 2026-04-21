@@ -1,0 +1,61 @@
+<div class="layout-container">
+
+  <aside class="sidebar" [class.minimized]="sidebarMinimizada">
+
+    <!-- HEADER COM LOGO -->
+    <div class="sidebar-header" *ngIf="!sidebarMinimizada">
+      <img
+        src="/images/guia.png"
+        alt="GUEDRI"
+        class="logo-img"
+      />
+    </div>
+
+    <!-- BOTÃO MENU -->
+    <div class="menu-toggle">
+      <button (click)="toggleSidebar()">☰</button>
+    </div>
+
+    <!-- MENU -->
+    <nav class="menu">
+
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/painel-setor" routerLinkActive="active">
+        <span>Painel do Setor</span>
+      </a>
+
+      <a routerLink="/informativos" routerLinkActive="active">
+        <span>Informativos</span>
+      </a>
+
+    
+
+      <a routerLink="/paginas-externas" routerLinkActive="active">
+        <span>Páginas Externas</span>
+      </a>
+
+      <a routerLink="/configuracoes" routerLinkActive="active">⚙️ Configurações</a>
+
+    </nav>
+
+    <!-- RODAPÉ -->
+    <div class="sidebar-footer">
+  <button class="logout-btn" (click)="sair()">Sair</button>
+</div>
+
+  </aside>
+
+  <div class="main-content">
+    <header class="header">
+      <h2>Sistema de Gestão de Chamados Guedri</h2>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+</div>

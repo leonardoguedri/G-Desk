@@ -1,0 +1,59 @@
+<div class="dashboard-container">
+
+  <div class="top-bar">
+    <div class="filtros">
+      <button (click)="setFiltro('geral')">Geral</button>
+      <button (click)="setFiltro('pendente')">Pendentes</button>
+      <button (click)="setFiltro('execucao')">Em execução</button>
+      <button (click)="setFiltro('concluido')">Concluídos</button>
+    </div>
+
+    <div class="acoes">
+      <button class="btn-criar" routerLink="/criar-chamado">+ Criar Chamado</button>
+      <button class="btn-exportar" (click)="exportarCSV()">⬇ Baixar</button>
+      <button (click)="mudarVisualizacao('lista')">📋</button>
+      <button (click)="mudarVisualizacao('bloco')">🧱</button>
+    </div>
+  </div>
+
+  <p *ngIf="carregando">Carregando chamados...</p>
+
+  <div *ngIf="!carregando && chamadosFiltrados.length === 0">
+    <p>Nenhum chamado encontrado.</p>
+  </div>
+
+  <!-- LISTA -->
+  <div *ngIf="visualizacao === 'lista' && !carregando" class="lista">
+    <div class="lista-header">
+      <span>Nº</span>
+      <span>Status</span>
+      <span>Instituição</span>
+      <span>Setor</span>
+      <span>Categoria</span>
+      <span>Responsável</span>
+      <span>Data</span>
+    </div>
+
+<div class="linha" *ngFor="let c of chamadosFiltrados" (click)="abrirDetalhe(c.id)" style="cursor:pointer;">      <span>{{ c.protocolo }}</span>
+      <span class="status" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
+      <span>{{ c.instituicao }}</span>
+      <span>{{ c.setor_destino }}</span>
+      <span>{{ c.categoria }}</span>
+      <span>{{ c.responsavel || '-' }}</span>
+      <span>{{ c.data_criacao }}</span>
+    </div>
+  </div>
+
+  <!-- BLOCOS -->
+  <div *ngIf="visualizacao === 'bloco' && !carregando" class="blocos">
+    <div class="card" *ngFor="let c of chamadosFiltrados">
+      <h3>{{ c.protocolo }}</h3>
+      <p>{{ c.instituicao }}</p>
+      <p>{{ c.setor_destino }}</p>
+      <p>{{ c.categoria }}</p>
+      <span class="status" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
+      <small>{{ c.data_criacao }}</small>
+    </div>
+  </div>
+
+</div>

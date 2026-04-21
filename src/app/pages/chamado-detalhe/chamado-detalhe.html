@@ -1,0 +1,145 @@
+<div class="detalhe-container">
+
+  <div class="topo">
+    <button class="btn-voltar" (click)="voltar()">← Voltar</button>
+    <h2>Detalhes do Chamado</h2>
+
+    <div class="acoes-chamado">
+      <button
+        class="btn-assumir"
+        *ngIf="podeAssumir"
+        (click)="assumirChamado()">
+        ✋ Assumir Chamado
+      </button>
+
+      <button
+        class="btn-concluir"
+        *ngIf="podeConcluir"
+        (click)="concluirChamado()">
+        ✅ Concluir Chamado
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="carregando">Carregando...</p>
+  <p *ngIf="erro" class="erro">{{ erro }}</p>
+
+  <div *ngIf="chamado" class="layout-detalhe">
+
+    <!-- COLUNA ESQUERDA -->
+    <div class="coluna-principal">
+
+      <div class="card">
+        <h3>Dados de Abertura</h3>
+        <div class="grid-3">
+          <div><label>Protocolo</label><p>{{ chamado.protocolo }}</p></div>
+          <div><label>Data</label><p>{{ chamado.data_criacao }}</p></div>
+          <div>
+            <label>Status</label>
+            <p class="badge {{ chamado.status | lowercase }}">{{ chamado.status }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Solicitante</h3>
+        <div class="grid-3">
+          <div><label>Nome</label><p>{{ chamado.solicitante_nome || '-' }}</p></div>
+          <div><label>Email</label><p>{{ chamado.solicitante_email || '-' }}</p></div>
+          <div><label>Telefone</label><p>{{ chamado.solicitante_telefone || '-' }}</p></div>
+        </div>
+        <div class="grid-2" style="margin-top:15px">
+          <div><label>Instituição</label><p>{{ chamado.instituicao || '-' }}</p></div>
+          <div><label>Unidade</label><p>{{ chamado.unidade || '-' }}</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Identificação da Solicitação</h3>
+        <div class="grid-3">
+          <div><label>Categoria</label><p>{{ chamado.categoria || '-' }}</p></div>
+          <div><label>Prioridade</label><p>{{ chamado.prioridade || '-' }}</p></div>
+          <div><label>Setor Destino</label><p>{{ chamado.setor_destino || '-' }}</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Descrição</h3>
+        <p>{{ chamado.descricao || '-' }}</p>
+      </div>
+
+      <div class="card">
+        <h3>Outras Informações</h3>
+        <div class="grid-2">
+          <div><label>Canal</label><p>{{ chamado.canal || '-' }}</p></div>
+          <div><label>Responsável</label><p>{{ chamado.responsavel_id ? 'Atribuído' : 'Não atribuído' }}</p></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUNA DIREITA -->
+    <div class="coluna-lateral">
+
+      <div class="card">
+        <h3>📋 Movimentações</h3>
+        <div class="timeline">
+          <div class="timeline-item" *ngFor="let m of movimentacoes">
+            <div class="timeline-dot"></div>
+            <div class="timeline-conteudo">
+              <strong>{{ m.usuario_nome }}</strong>
+              <span class="tipo">{{ m.tipo }}</span>
+              <p>{{ m.descricao }}</p>
+              <small>{{ m.data }}</small>
+            </div>
+          </div>
+          <p *ngIf="movimentacoes.length === 0">Nenhuma movimentação.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💬 Comentários Internos</h3>
+        <div class="comentarios">
+          <div class="comentario-item" *ngFor="let c of comentarios">
+            <div class="comentario-header">
+              <strong>{{ c.usuario_nome }}</strong>
+              <small>{{ c.data }}</small>
+            </div>
+            <p>{{ c.texto }}</p>
+          </div>
+          <p *ngIf="comentarios.length === 0">Nenhum comentário ainda.</p>
+        </div>
+        <div class="novo-comentario">
+          <textarea
+            [(ngModel)]="novoComentario"
+            placeholder="Digite um comentário interno..."
+            rows="3">
+          </textarea>
+          <button (click)="enviarComentario()">Enviar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📎 Anexos</h3>
+        <div class="anexos-lista">
+          <div class="anexo-item" *ngFor="let a of anexos">
+            <a [href]="apiUrl + '/uploads/' + a.caminho" target="_blank">
+              📄 {{ a.nome }}
+            </a>
+            <small>{{ a.data }}</small>
+          </div>
+          <p *ngIf="anexos.length === 0">Nenhum anexo.</p>
+        </div>
+        <div class="novo-anexo">
+          <input type="file" (change)="onArquivoSelecionado($event)">
+          <button (click)="enviarAnexo()" [disabled]="!arquivoSelecionado">
+            Enviar Anexo
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

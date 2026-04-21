@@ -1,0 +1,82 @@
+<div class="painel-container">
+
+  <!-- CARDS DE MÉTRICAS -->
+  <div class="cards-metricas">
+    <div class="card-metrica">
+      <span>Total</span>
+      <strong>{{ total }}</strong>
+    </div>
+    <div class="card-metrica pendente">
+      <span>Pendentes</span>
+      <strong>{{ pendentes }}</strong>
+      <small>{{ porcentagemPendentes }}%</small>
+    </div>
+    <div class="card-metrica execucao">
+      <span>Em Execução</span>
+      <strong>{{ emExecucao }}</strong>
+      <small>{{ porcentagemExecucao }}%</small>
+    </div>
+    <div class="card-metrica concluido">
+      <span>Concluídos</span>
+      <strong>{{ concluidos }}</strong>
+      <small>{{ porcentagemConcluidos }}%</small>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="top-bar">
+    <div class="filtros">
+      <button
+        (click)="setFiltro('entrada')"
+        [class.active]="filtro === 'entrada'">
+        📥 Caixa de Entrada
+      </button>
+      <button
+        (click)="setFiltro('meus')"
+        [class.active]="filtro === 'meus'">
+        👤 Meus Chamados
+      </button>
+      <button
+        (click)="setFiltro('todos')"
+        [class.active]="filtro === 'todos'">
+        🏢 Todos do Setor
+      </button>
+    </div>
+
+    <button class="btn-exportar" (click)="exportarCSV()">⬇ Baixar</button>
+  </div>
+
+  <p *ngIf="carregando">Carregando chamados do setor...</p>
+
+  <!-- LISTA -->
+  <div *ngIf="!carregando" class="lista">
+
+    <div class="lista-header">
+      <span>Nº</span>
+      <span>Status</span>
+      <span>Instituição</span>
+      <span>Setor</span>
+      <span>Categoria</span>
+      <span>Data</span>
+    </div>
+
+    <div
+      class="linha"
+      *ngFor="let c of chamadosFiltrados"
+      (click)="abrirDetalhe(c.id)"
+      style="cursor: pointer;">
+      <span>{{ c.protocolo }}</span>
+      <span class="status" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
+      <span>{{ c.instituicao }}</span>
+      <span>{{ c.setor_destino }}</span>
+      <span>{{ c.categoria }}</span>
+      <span>{{ c.data_criacao }}</span>
+    </div>
+
+    <p *ngIf="chamadosFiltrados.length === 0">
+      Nenhum chamado encontrado.
+    </p>
+
+  </div>
+
+</div>

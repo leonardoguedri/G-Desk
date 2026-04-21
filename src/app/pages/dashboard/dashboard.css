@@ -1,0 +1,104 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* TOPO */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* FILTROS */
+.filtros {
+  display: flex;
+  gap: 10px;
+}
+
+/* AÇÕES */
+.acoes {
+  display: flex;
+  gap: 10px;
+}
+
+/* BOTÕES */
+button {
+  padding: 8px 14px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+button:hover {
+  background: #d1d5db;
+}
+
+/* BOTÕES PRINCIPAIS */
+.btn-criar {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-exportar {
+  background: #16a34a;
+  color: white;
+}
+
+/* LISTA */
+.lista {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lista-header,
+.linha {
+  display: grid;
+  grid-template-columns: 
+    1fr 1fr 2fr 1fr 2fr 2fr 1fr;
+
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.lista-header {
+  font-weight: bold;
+  background: #f9fafb;
+}
+
+.linha:hover {
+  background: #f3f4f6;
+}
+
+/* STATUS */
+.status {
+  font-weight: bold;
+}
+
+.status.pendente {
+  color: orange;
+}
+
+.status.execucao {
+  color: blue;
+}
+
+.status.concluido {
+  color: green;
+}
+
+/* BLOCOS */
+.blocos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+}

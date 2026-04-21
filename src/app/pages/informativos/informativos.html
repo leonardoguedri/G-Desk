@@ -1,0 +1,77 @@
+<div class="container">
+
+  <!-- FORM -->
+  <div class="formulario">
+
+    <h2>📢 Enviar Informativo</h2>
+
+    <!-- DESTINO -->
+    <select [(ngModel)]="regiaoSelecionada" (change)="onRegiaoChange()">
+      <option value="">Região</option>
+      <option *ngFor="let r of regioes" [value]="r">{{r}}</option>
+    </select>
+
+    <select *ngIf="mostrarClientes"
+            [(ngModel)]="clienteSelecionado"
+            (change)="onClienteChange()">
+      <option value="">Todos os clientes</option>
+      <option *ngFor="let c of clientes" [value]="c">{{c}}</option>
+    </select>
+
+    <select *ngIf="mostrarSetores"
+            [(ngModel)]="setorSelecionado">
+      <option value="">Todos os setores</option>
+      <option *ngFor="let s of setoresProdepa" [value]="s">{{s}}</option>
+    </select>
+
+    <!-- CONTEÚDO -->
+    <input type="text" placeholder="Assunto" [(ngModel)]="assunto">
+
+    <input type="text" placeholder="Título do informativo" [(ngModel)]="titulo">
+
+    <textarea placeholder="Mensagem..."
+              [(ngModel)]="mensagem"></textarea>
+
+    <button (click)="enviar()">Enviar</button>
+
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview">
+
+    <div class="email">
+
+      <div class="header">
+       
+
+         <img
+        src="/images/prodep.jpg"
+        alt="GUEDRI"
+        class="logo-img"
+      />
+      </div>
+
+      <div class="body">
+
+        <h3>{{titulo || 'Título do informativo'}}</h3>
+
+        <p class="data">
+          {{dataAtual | date:'dd/MM/yyyy'}}
+        </p>
+
+        <p class="mensagem">
+          {{mensagem || 'Sua mensagem aparecerá aqui...'}}
+        </p>
+
+      </div>
+
+      <div class="footer">
+        Enviado por PRODEPA-Empresa de Tecnologia da Informação e Comunicação do Estado do Pará atravéz da GCI - Guedri Codificando o Impossivel,
+Você está recebendo esse e-mail por ser parceiro da PRODEPA. Por mais informações entre em contato com nossas centrais de atendimento. 
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,142 @@
+<div class="config-container">
+
+  <h2>⚙️ Configurações do Sistema</h2>
+
+  <div class="abas">
+    <button (click)="setAba('usuarios')" [class.active]="abaAtiva === 'usuarios'">Usuários</button>
+    <button (click)="setAba('setores')" [class.active]="abaAtiva === 'setores'">Setores</button>
+    <button (click)="setAba('instituicoes')" [class.active]="abaAtiva === 'instituicoes'">Instituições</button>
+    <button (click)="setAba('categorias')" [class.active]="abaAtiva === 'categorias'">Categorias e SLA</button>
+  </div>
+
+  <!-- USUÁRIOS -->
+  <div *ngIf="abaAtiva === 'usuarios'" class="card">
+    <h3>Usuários</h3>
+
+    <div class="form-inline">
+      <input placeholder="Nome" [(ngModel)]="novoUsuario.nome">
+      <input placeholder="Email" [(ngModel)]="novoUsuario.email">
+      <input placeholder="Senha" type="password" [(ngModel)]="novoUsuario.senha">
+      <input placeholder="Setor" [(ngModel)]="novoUsuario.setor">
+      <select [(ngModel)]="novoUsuario.perfil">
+        <option value="user">Usuário</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="btn-add" (click)="criarUsuario()">+ Adicionar</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Email</th>
+          <th>Setor</th>
+          <th>Perfil</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of usuarios">
+          <td>{{ u.nome }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.setor || '-' }}</td>
+          <td>{{ u.perfil }}</td>
+          <td>
+            <button class="btn-del" (click)="deletarUsuario(u.id)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SETORES -->
+  <div *ngIf="abaAtiva === 'setores'" class="card">
+    <h3>Setores</h3>
+
+    <div class="form-inline">
+      <input placeholder="Nome do setor" [(ngModel)]="novoSetor.nome">
+      <button class="btn-add" (click)="criarSetor()">+ Adicionar</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of setores">
+          <td>{{ s.nome }}</td>
+          <td>
+            <button class="btn-del" (click)="deletarSetor(s.id)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- INSTITUIÇÕES -->
+  <div *ngIf="abaAtiva === 'instituicoes'" class="card">
+    <h3>Instituições</h3>
+
+    <div class="form-inline">
+      <input placeholder="Nome" [(ngModel)]="novaInstituicao.nome">
+      <input placeholder="Cidade" [(ngModel)]="novaInstituicao.cidade">
+      <button class="btn-add" (click)="criarInstituicao()">+ Adicionar</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Cidade</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let i of instituicoes">
+          <td>{{ i.nome }}</td>
+          <td>{{ i.cidade }}</td>
+          <td>
+            <button class="btn-del" (click)="deletarInstituicao(i.id)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CATEGORIAS -->
+  <div *ngIf="abaAtiva === 'categorias'" class="card">
+    <h3>Categorias e SLA</h3>
+
+    <div class="form-inline">
+      <input placeholder="Nome da categoria" [(ngModel)]="novaCategoria.nome">
+      <input placeholder="SLA Resposta (ex: 2h)" [(ngModel)]="novaCategoria.sla_resposta">
+      <input placeholder="SLA Solução (ex: 8h)" [(ngModel)]="novaCategoria.sla_solucao">
+      <button class="btn-add" (click)="criarCategoria()">+ Adicionar</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>SLA Resposta</th>
+          <th>SLA Solução</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of categorias">
+          <td>{{ c.nome }}</td>
+          <td>{{ c.sla_resposta }}</td>
+          <td>{{ c.sla_solucao }}</td>
+          <td>
+            <button class="btn-del" (click)="deletarCategoria(c.id)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

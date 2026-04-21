@@ -1,0 +1,50 @@
+<div class="login-container">
+
+  <header class="login-header">
+    <img
+      src="/images/guia.png"
+      alt="GUEDRI"
+      class="logo-img"
+    />
+  </header>
+
+  <h1>G-Desk</h1>
+  <h5>Gestão inteligente de chamados e serviços</h5>
+
+  <form class="login-form" (ngSubmit)="onSubmit()">
+
+    <div class="input-group">
+      <input
+        type="text"
+        placeholder="USUÁRIO"
+        [(ngModel)]="username"
+        name="username"
+        required
+      />
+    </div>
+
+    <div class="input-group">
+      <input
+        type="password"
+        placeholder="SENHA"
+        [(ngModel)]="password"
+        name="password"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn-login">
+      ENTRAR
+    </button>
+
+    <p *ngIf="loginError" class="error-text">
+      Usuário ou senha inválidos
+    </p>
+
+  </form>
+
+  <p class="footer-text">
+    Não tem conta? Solicite ao administrador do sistema.
+  </p>
+
+</div>
