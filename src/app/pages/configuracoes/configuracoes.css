@@ -24,7 +24,7 @@ h2 { margin-bottom: 20px; }
 }
 
 .abas button.active {
-  background: #2563eb;
+  background: #1b2538;
   color: white;
 }
 
@@ -55,7 +55,7 @@ h2 { margin-bottom: 20px; }
 }
 
 .btn-add {
-  background: #2563eb;
+  background: #1b2538;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -91,4 +91,79 @@ td {
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+}
+
+.btn-edit {
+  background: #1b2538;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 450px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal h4 {
+  margin-bottom: 5px;
+}
+
+.modal label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.modal input,
+.modal select {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.modal-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-salvar {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-cancelar {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
 }

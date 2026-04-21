@@ -26,5 +26,15 @@ export class LayoutComponent {
   sair() {
   localStorage.removeItem('usuario');
   this.router.navigate(['/login']);
+  
+}
+// aparecer o nome do usurario em cima dando as boasvindas 
+nomeUsuario: string = '';
+emailUsuario: string = '';
+ngOnInit() {
+  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+  this.nomeUsuario = usuario.nome || ''; 
+   this.emailUsuario = usuario.email || '';
+
 }
 }

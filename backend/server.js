@@ -114,7 +114,7 @@ app.post('/login', (req, res) => {
       { expiresIn: '8h' }
     );
 
-    res.json({ token, usuario: { id: user.id, nome: user.nome, perfil: user.perfil, setor: user.setor } });
+    res.json({ token, usuario: { id: user.id, nome: user.nome, email: user.email,  perfil: user.perfil, setor: user.setor } });
   });
 });
 
@@ -400,4 +400,68 @@ app.delete('/categorias/:id', autenticar, (req, res) => {
   });
 });
 
+// EDITAR USUÁRIO
+app.put('/usuarios/:id', autenticar, async (req, res) => {
+  const { nome, email, senha, perfil, setor } = req.body;
+  
+  if (senha) {
+    const senhaCriptografada = await bcrypt.hash(senha, 10);
+    db.run(
+      `UPDATE usuarios SET nome = ?, email = ?, senha = ?, perfil = ?, setor = ? WHERE id = ?`,
+      [nome, email, senhaCriptografada, perfil, setor, req.params.id],
+      function (err) {
+        if (err) return res.status(500).json(err);
+        res.json({ sucesso: true });
+      }
+    );
+  } else {
+    db.run(
+      `UPDATE usuarios SET nome = ?, email = ?, perfil = ?, setor = ? WHERE id = ?`,
+      [nome, email, perfil, setor, req.params.id],
+      function (err) {
+        if (err) return res.status(500).json(err);
+        res.json({ sucesso: true });
+      }
+    );
+  }
+});
+
+// EDITAR SETOR
+app.put('/setores/:id', autenticar, (req, res) => {
+  const { nome } = req.body;
+  db.run(
+    `UPDATE setores SET nome = ? WHERE id = ?`,
+    [nome, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
+// EDITAR INSTITUIÇÃO
+app.put('/instituicoes/:id', autenticar, (req, res) => {
+  const { nome, cidade } = req.body;
+  db.run(
+    `UPDATE instituicoes SET nome = ?, cidade = ? WHERE id = ?`,
+    [nome, cidade, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
+// EDITAR CATEGORIA
+app.put('/categorias/:id', autenticar, (req, res) => {
+  const { nome, sla_resposta, sla_solucao } = req.body;
+  db.run(
+    `UPDATE categorias SET nome = ?, sla_resposta = ?, sla_solucao = ? WHERE id = ?`,
+    [nome, sla_resposta, sla_solucao, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
 app.listen(3000, () => console.log('Servidor rodando em http://localhost:3000'));

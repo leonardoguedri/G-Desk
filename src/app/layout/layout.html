@@ -2,55 +2,72 @@
 
   <aside class="sidebar" [class.minimized]="sidebarMinimizada">
 
-    <!-- HEADER COM LOGO -->
-    <div class="sidebar-header" *ngIf="!sidebarMinimizada">
-      <img
-        src="/images/guia.png"
-        alt="GUEDRI"
-        class="logo-img"
-      />
+    <!-- HEADER COM LOGO + TEXTO -->
+    <div class="sidebar-header">
+      <img src="/images/guia.png" alt="GUEDRI" class="logo-img" />
+
+      <div class="logo-text">
+        <span class="logo-title">G-Desk</span>
+        <span class="logo-subtitle">Gestão inteligente de chamados e serviços</span>
+      </div>
     </div>
+
+    <!-- LINHA -->
+    <div class="divider"></div>
 
     <!-- BOTÃO MENU -->
     <div class="menu-toggle">
       <button (click)="toggleSidebar()">☰</button>
     </div>
 
+    <!-- TITULO -->
+    <span class="menu-title">Principal</span>
+
     <!-- MENU -->
     <nav class="menu">
 
       <a routerLink="/dashboard" routerLinkActive="active">
-        <span>Dashboard</span>
-      </a>
+  <i class="fa-regular fa-chart-bar"></i>
+  <span>Dashboard</span>
+</a>
 
       <a routerLink="/painel-setor" routerLinkActive="active">
-        <span>Painel do Setor</span>
+<i class="fa-solid fa-inbox"></i>
+         <span>Painel do Setor</span>
       </a>
 
       <a routerLink="/informativos" routerLinkActive="active">
+        <i class="fa-solid fa-envelope-open-text"></i>
         <span>Informativos</span>
       </a>
 
-    
-
       <a routerLink="/paginas-externas" routerLinkActive="active">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
         <span>Páginas Externas</span>
       </a>
 
-      <a routerLink="/configuracoes" routerLinkActive="active">⚙️ Configurações</a>
+      <a routerLink="/configuracoes" routerLinkActive="active">
+        <i class="fa-solid fa-gear"></i>
+        <span>Configurações</span>
+      </a>
 
     </nav>
 
     <!-- RODAPÉ -->
-    <div class="sidebar-footer">
-  <button class="logout-btn" (click)="sair()">Sair</button>
+   <div class="sidebar-footer">
+    <h6> {{ nomeUsuario }}.</h6>
+    <h6>{{ emailUsuario }}</h6>
+  <button class="logout-btn" (click)="sair()">
+    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+    <span>Sair</span>
+  </button>
 </div>
 
   </aside>
 
   <div class="main-content">
     <header class="header">
-      <h2>Sistema de Gestão de Chamados Guedri</h2>
+      <h2>Bem vindo ao G-Desk, {{ nomeUsuario }}.</h2>
     </header>
 
     <main class="content">

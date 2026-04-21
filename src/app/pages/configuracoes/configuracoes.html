@@ -1,6 +1,6 @@
 <div class="config-container">
 
-  <h2>⚙️ Configurações do Sistema</h2>
+  <h2>Configurações do Sistema</h2>
 
   <div class="abas">
     <button (click)="setAba('usuarios')" [class.active]="abaAtiva === 'usuarios'">Usuários</button>
@@ -25,6 +25,30 @@
       <button class="btn-add" (click)="criarUsuario()">+ Adicionar</button>
     </div>
 
+    <!-- MODAL EDIÇÃO USUÁRIO -->
+    <div class="modal-backdrop" *ngIf="editandoUsuario">
+      <div class="modal">
+        <h4>Editar Usuário</h4>
+        <label>Nome</label>
+        <input [(ngModel)]="editandoUsuario.nome">
+        <label>Email</label>
+        <input [(ngModel)]="editandoUsuario.email">
+        <label>Nova Senha (deixe vazio para não alterar)</label>
+        <input type="password" [(ngModel)]="editandoUsuario.senha" placeholder="Nova senha">
+        <label>Setor</label>
+        <input [(ngModel)]="editandoUsuario.setor">
+        <label>Perfil</label>
+        <select [(ngModel)]="editandoUsuario.perfil">
+          <option value="user">Usuário</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="modal-acoes">
+          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn-salvar" (click)="salvarUsuario()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -32,7 +56,7 @@
           <th>Email</th>
           <th>Setor</th>
           <th>Perfil</th>
-          <th>Ação</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -42,6 +66,7 @@
           <td>{{ u.setor || '-' }}</td>
           <td>{{ u.perfil }}</td>
           <td>
+            <button class="btn-edit" (click)="editarUsuario(u)">Editar</button>
             <button class="btn-del" (click)="deletarUsuario(u.id)">Excluir</button>
           </td>
         </tr>
@@ -58,17 +83,31 @@
       <button class="btn-add" (click)="criarSetor()">+ Adicionar</button>
     </div>
 
+    <!-- MODAL EDIÇÃO SETOR -->
+    <div class="modal-backdrop" *ngIf="editandoSetor">
+      <div class="modal">
+        <h4>Editar Setor</h4>
+        <label>Nome</label>
+        <input [(ngModel)]="editandoSetor.nome">
+        <div class="modal-acoes">
+          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn-salvar" (click)="salvarSetor()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <table>
       <thead>
         <tr>
           <th>Nome</th>
-          <th>Ação</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let s of setores">
           <td>{{ s.nome }}</td>
           <td>
+            <button class="btn-edit" (click)="editarSetor(s)">Editar</button>
             <button class="btn-del" (click)="deletarSetor(s.id)">Excluir</button>
           </td>
         </tr>
@@ -86,12 +125,27 @@
       <button class="btn-add" (click)="criarInstituicao()">+ Adicionar</button>
     </div>
 
+    <!-- MODAL EDIÇÃO INSTITUIÇÃO -->
+    <div class="modal-backdrop" *ngIf="editandoInstituicao">
+      <div class="modal">
+        <h4>Editar Instituição</h4>
+        <label>Nome</label>
+        <input [(ngModel)]="editandoInstituicao.nome">
+        <label>Cidade</label>
+        <input [(ngModel)]="editandoInstituicao.cidade">
+        <div class="modal-acoes">
+          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn-salvar" (click)="salvarInstituicao()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <table>
       <thead>
         <tr>
           <th>Nome</th>
           <th>Cidade</th>
-          <th>Ação</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -99,6 +153,7 @@
           <td>{{ i.nome }}</td>
           <td>{{ i.cidade }}</td>
           <td>
+            <button class="btn-edit" (click)="editarInstituicao(i)">Editar</button>
             <button class="btn-del" (click)="deletarInstituicao(i.id)">Excluir</button>
           </td>
         </tr>
@@ -117,13 +172,30 @@
       <button class="btn-add" (click)="criarCategoria()">+ Adicionar</button>
     </div>
 
+    <!-- MODAL EDIÇÃO CATEGORIA -->
+    <div class="modal-backdrop" *ngIf="editandoCategoria">
+      <div class="modal">
+        <h4>Editar Categoria</h4>
+        <label>Nome</label>
+        <input [(ngModel)]="editandoCategoria.nome">
+        <label>SLA Resposta</label>
+        <input [(ngModel)]="editandoCategoria.sla_resposta">
+        <label>SLA Solução</label>
+        <input [(ngModel)]="editandoCategoria.sla_solucao">
+        <div class="modal-acoes">
+          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn-salvar" (click)="salvarCategoria()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <table>
       <thead>
         <tr>
           <th>Nome</th>
           <th>SLA Resposta</th>
           <th>SLA Solução</th>
-          <th>Ação</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -132,6 +204,7 @@
           <td>{{ c.sla_resposta }}</td>
           <td>{{ c.sla_solucao }}</td>
           <td>
+            <button class="btn-edit" (click)="editarCategoria(c)">Editar</button>
             <button class="btn-del" (click)="deletarCategoria(c.id)">Excluir</button>
           </td>
         </tr>

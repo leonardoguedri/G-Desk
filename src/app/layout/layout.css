@@ -6,8 +6,8 @@
 
 /* SIDEBAR */
 .sidebar {
-  width: 240px;
-  background: #111827;
+  width: 220px;
+  background: hsl(221, 39%, 11%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -16,23 +16,47 @@
 
 /* MINIMIZADA */
 .sidebar.minimized {
-  width: 70px;
+  width: 60px;
 }
 
-/* HEADER (LOGO GRANDE) */
+/* HEADER (LOGO + TEXTO) */
 .sidebar-header {
-  background: #1f2937;
-  padding: 20px 10px;
+  padding: 15px 12px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  gap: 10px;
 }
 
 /* LOGO */
 .logo-img {
-  max-width: 50px;
-  height: auto;
+  width: 35px;
+  height: 35px;
   object-fit: contain;
+}
+
+/* TEXTO LOGO */
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.logo-subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* DIVISOR */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 10px 0;
 }
 
 /* BOTÃO MENU */
@@ -49,11 +73,19 @@
   cursor: pointer;
 }
 
+/* TITULO MENU */
+.menu-title {
+  font-size: 9px;
+  color: #6b7280;
+  padding: 5px 15px;
+  text-transform: uppercase;
+}
+
 /* MENU */
 .menu {
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 5px 10px;
   gap: 6px;
 }
 
@@ -61,12 +93,16 @@
 .menu a {
   display: flex;
   align-items: center;
-  padding: 15px;
+  padding: 12px;
   border-radius: 6px;
   color: white;
   text-decoration: none;
   transition: background 0.2s;
+  gap: 12px; /* Espaço entre ícone e texto */
 }
+
+
+
 
 /* HOVER */
 .menu a:hover {
@@ -75,7 +111,7 @@
 
 /* ATIVO */
 .menu a.active {
-  background: #2563eb;
+  background: #1b2538;
 }
 
 /* TEXTO */
@@ -83,14 +119,10 @@
   transition: opacity 0.2s;
 }
 
-/* ESCONDER TEXTO */
-.sidebar.minimized .menu span {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ESCONDER HEADER */
-.sidebar.minimized .sidebar-header {
+/* ESCONDER TEXTO AO MINIMIZAR */
+.sidebar.minimized .menu span,
+.sidebar.minimized .logo-text,
+.sidebar.minimized .menu-title {
   display: none;
 }
 
@@ -102,14 +134,44 @@
 
 .logout-btn {
   width: 100%;
-  padding: 10px;
-  background: #dc2626;
+  padding: 12px;
+  background: transparent;
   border: none;
   color: white;
   cursor: pointer;
   border-radius: 6px;
+  display: flex;       /* Alinha ícone e texto em linha */
+  align-items: center; /* Centraliza verticalmente */
+  gap: 12px;           /* Espaçamento entre o ícone e a palavra Sair */
+  transition: background 0.2s;
+  font-family: inherit; /* Garante que a fonte seja a mesma do resto */
+  font-size: 14px;
 }
 
+.logout-btn i {
+  font-size: 13px;     /* Tamanho do ícone de logout */
+  min-width: 24px;     /* Mesma largura dos ícones do menu para manter o padrão */
+  display: flex;
+  justify-content: center;
+}
+
+.logout-btn:hover {
+  background: #1f2937; /* Dica: um tom de vermelho combina com 'Sair' */
+  color: white;
+}
+
+/* --- AJUSTE PARA SIDEBAR MINIMIZADA --- */
+
+/* Esconde o texto "Sair" quando a classe .minimized estiver ativa */
+.sidebar.minimized .logout-btn span {
+  display: none;
+}
+
+/* Centraliza o ícone de logout quando a sidebar estiver estreita */
+.sidebar.minimized .logout-btn {
+  justify-content: center;
+  padding: 12px 0;
+}
 /* MAIN */
 .main-content {
   flex: 1;
@@ -124,4 +186,34 @@
 
 .content {
   padding: 16px;
+}
+.sidebar.minimized .sidebar-footer h6 {
+  display: none;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* linha em cima */
+}
+
+.sidebar-footer h6 {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  line-height: 1.2;
+  
+}
+
+/* Nome */
+.sidebar-footer h6:first-child {
+  font-weight: 600;
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 0px; /* espaço pequeno entre nome e email */
+}
+
+.sidebar-footer h6:last-of-type {
+  font-weight: 400;
+  font-size: 10px;
+  color: #5f6570;
+  margin-bottom: 12px;
 }
