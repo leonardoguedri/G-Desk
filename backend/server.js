@@ -464,4 +464,25 @@ app.put('/categorias/:id', autenticar, (req, res) => {
     }
   );
 });
+// NOTIFICAÇÕES - chamados novos do setor do usuário
+app.get('/notificacoes/:usuario_id', autenticar, (req, res) => {
+  const { usuario_id } = req.params;
+
+  db.get(`SELECT setor FROM usuarios WHERE id = ?`, [usuario_id], (err, user) => {
+    if (err) return res.status(500).json(err);
+    if (!user || !user.setor) return res.json([]);
+
+    db.all(
+      `SELECT id, protocolo, titulo, data_criacao 
+       FROM chamados 
+       WHERE setor_destino = ? AND status = 'Pendente'
+       ORDER BY id DESC LIMIT 10`,
+      [user.setor],
+      (err, rows) => {
+        if (err) return res.status(500).json(err);
+        res.json(rows);
+      }
+    );
+  });
+});
 app.listen(3000, () => console.log('Servidor rodando em http://localhost:3000'));

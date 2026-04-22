@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 
 interface Chamado {
@@ -19,7 +20,7 @@ interface Chamado {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -28,8 +29,20 @@ export class DashboardComponent implements OnInit {
   visualizacao: 'lista' | 'bloco' = 'lista';
   filtro: 'geral' | 'pendente' | 'execucao' | 'concluido' = 'geral';
   usuarioLogado: any = JSON.parse(localStorage.getItem('usuario') || '{}');
+
   chamados: Chamado[] = [];
+  instituicoes: any[] = [];
   carregando = true;
+
+  filtroAvancado = {
+    protocolo: '',
+    instituicao: '',
+    categoria: '',
+    dataInicio: '',
+    dataFim: ''
+  };
+
+  filtrosAbertos = false;
 
   constructor(
     private router: Router,
@@ -38,7 +51,10 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    await this.carregarChamados();
+    await Promise.all([
+      this.carregarChamados(),
+      this.carregarInstituicoes()
+    ]);
   }
 
   async carregarChamados() {
@@ -54,18 +70,69 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  abrirDetalhe(id: number) {
-    this.router.navigate(['/chamado', id]);
+  async carregarInstituicoes() {
+    try {
+      this.instituicoes = await this.api.get('/instituicoes');
+    } catch (e) {
+      console.error('Erro ao carregar instituições:', e);
+    }
+  }
+
+  limparFiltros() {
+    this.filtroAvancado = {
+      protocolo: '',
+      instituicao: '',
+      categoria: '',
+      dataInicio: '',
+      dataFim: ''
+    };
+    this.cdr.detectChanges();
   }
 
   get chamadosFiltrados() {
     return this.chamados.filter(c => {
-      if (this.filtro === 'geral') return true;
-      if (this.filtro === 'pendente') return c.status === 'Pendente';
-      if (this.filtro === 'execucao') return c.status === 'Em Execução';
-      if (this.filtro === 'concluido') return c.status === 'Concluído';
+
+      // FILTRO DE ABAS
+      if (this.filtro === 'pendente' && c.status !== 'Pendente') return false;
+      if (this.filtro === 'execucao' && c.status !== 'Em Execução') return false;
+      if (this.filtro === 'concluido' && c.status !== 'Concluído') return false;
+
+      // FILTROS AVANÇADOS
+      if (this.filtroAvancado.protocolo &&
+        !c.protocolo.toLowerCase().includes(this.filtroAvancado.protocolo.toLowerCase())) {
+        return false;
+      }
+
+      if (this.filtroAvancado.instituicao &&
+        c.instituicao !== this.filtroAvancado.instituicao) {
+        return false;
+      }
+
+      if (this.filtroAvancado.categoria &&
+        !c.categoria?.toLowerCase().includes(this.filtroAvancado.categoria.toLowerCase())) {
+        return false;
+      }
+
+      if (this.filtroAvancado.dataInicio) {
+        const dataInicio = new Date(this.filtroAvancado.dataInicio);
+        const partes = c.data_criacao.split('/');
+        const dataChamado = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
+        if (dataChamado < dataInicio) return false;
+      }
+
+      if (this.filtroAvancado.dataFim) {
+        const dataFim = new Date(this.filtroAvancado.dataFim);
+        const partes = c.data_criacao.split('/');
+        const dataChamado = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
+        if (dataChamado > dataFim) return false;
+      }
+
       return true;
     });
+  }
+
+  abrirDetalhe(id: number) {
+    this.router.navigate(['/chamado', id]);
   }
 
   mudarVisualizacao(tipo: 'lista' | 'bloco') {

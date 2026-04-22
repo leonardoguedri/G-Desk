@@ -65,14 +65,50 @@
 
   </aside>
 
-  <div class="main-content">
+ <div class="main-content">
+
     <header class="header">
-      <h2>Bem vindo ao G-Desk, {{ nomeUsuario }}.</h2>
+       <h2>Bem vindo ao G-Desk, {{ nomeUsuario }}.</h2>
+
+      <div class="header-acoes">
+
+        <!-- NOTIFICAÇÕES -->
+        <div class="notificacao-wrapper">
+          <button class="btn-notificacao"
+            (click)="mostrarNotificacoes = !mostrarNotificacoes">
+            <i class="fa-solid fa-bell"></i>
+            <span class="badge" *ngIf="notificacaoService.total > 0">
+              {{ notificacaoService.total }}
+            </span>
+          </button>
+
+          <div class="notificacao-dropdown" *ngIf="mostrarNotificacoes">
+            <h4>Chamados Pendentes no Seu Setor</h4>
+
+            <div *ngIf="notificacaoService.notificacoes.length === 0">
+              <p>Nenhum chamado pendente.</p>
+            </div>
+
+            <div class="notificacao-item"
+              *ngFor="let n of notificacaoService.notificacoes">
+              <strong>{{ n.protocolo }}</strong>
+              <p>{{ n.titulo }}</p>
+              <small>{{ n.data_criacao }}</small>
+            </div>
+          </div>
+        </div>
+
+        <span class="usuario-nome">Notificações</span>
+
+      </div>
     </header>
 
     <main class="content">
       <router-outlet></router-outlet>
     </main>
+
   </div>
+
+  
 
 </div>

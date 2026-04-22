@@ -217,3 +217,80 @@
   color: #5f6570;
   margin-bottom: 12px;
 }
+
+/* notificação*/
+.header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.usuario-nome {
+  font-size: 12px;
+  color: #374151;
+  margin-left: -15px; /* puxa pra esquerda */}
+
+.notificacao-wrapper {
+  position: relative;
+}
+
+.btn-notificacao {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  position: relative;
+  padding: 4px;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notificacao-dropdown {
+  position: absolute;
+  left: 0; /* muda de right para left */
+  top: 36px;
+  width: 300px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 16px;
+  z-index: 100;
+}
+.notificacao-dropdown h4 {
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.notificacao-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.notificacao-item strong {
+  font-size: 13px;
+  color: #2563eb;
+}
+
+.notificacao-item p {
+  font-size: 12px;
+  margin: 2px 0;
+}
+
+.notificacao-item small {
+  color: #9ca3af;
+  font-size: 11px;
+}
