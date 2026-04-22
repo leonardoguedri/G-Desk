@@ -159,3 +159,46 @@ button:hover {
   color: #6b7280;
   margin: 0;
 }
+.paginacao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.pag-btn {
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  min-width: 36px;
+}
+
+.pag-btn:hover {
+  background: #f3f4f6;
+}
+
+.pag-btn.ativa {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.pag-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pag-reticencias {
+  padding: 6px 4px;
+  color: #9ca3af;
+}
+
+.pag-info {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 8px;
+}

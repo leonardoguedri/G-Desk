@@ -22,45 +22,35 @@
   <!-- FILTROS AVANÇADOS -->
   <div class="filtros-avancados" *ngIf="filtrosAbertos">
     <div class="filtros-grid">
-
       <div>
         <label>Protocolo</label>
         <input type="text" [(ngModel)]="filtroAvancado.protocolo"
           placeholder="Digite o protocolo">
       </div>
-
       <div>
         <label>Instituição</label>
         <select [(ngModel)]="filtroAvancado.instituicao">
           <option value="">Todas</option>
-          <option *ngFor="let i of instituicoes" [value]="i.nome">
-            {{ i.nome }}
-          </option>
+          <option *ngFor="let i of instituicoes" [value]="i.nome">{{ i.nome }}</option>
         </select>
       </div>
-
       <div>
         <label>Categoria</label>
         <input type="text" [(ngModel)]="filtroAvancado.categoria"
           placeholder="Digite a categoria">
       </div>
-
       <div>
         <label>Data Início</label>
         <input type="date" [(ngModel)]="filtroAvancado.dataInicio">
       </div>
-
       <div>
         <label>Data Fim</label>
         <input type="date" [(ngModel)]="filtroAvancado.dataFim">
       </div>
-
       <div class="filtro-acoes">
         <button class="btn-limpar" (click)="limparFiltros()">Limpar</button>
       </div>
-
     </div>
-
     <p class="resultado-filtro">
       {{ chamadosFiltrados.length }} chamado(s) encontrado(s)
     </p>
@@ -84,7 +74,7 @@
       <span>Data</span>
     </div>
 
-    <div class="linha" *ngFor="let c of chamadosFiltrados"
+    <div class="linha" *ngFor="let c of chamadosPaginados"
       (click)="abrirDetalhe(c.id)" style="cursor:pointer;">
       <span>{{ c.protocolo }}</span>
       <span class="status" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
@@ -98,7 +88,7 @@
 
   <!-- BLOCOS -->
   <div *ngIf="visualizacao === 'bloco' && !carregando" class="blocos">
-    <div class="card" *ngFor="let c of chamadosFiltrados"
+    <div class="card" *ngFor="let c of chamadosPaginados"
       (click)="abrirDetalhe(c.id)" style="cursor:pointer;">
       <h3>{{ c.protocolo }}</h3>
       <p>{{ c.instituicao }}</p>
@@ -107,6 +97,41 @@
       <span class="status" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
       <small>{{ c.data_criacao }}</small>
     </div>
+  </div>
+
+  <!-- PAGINAÇÃO -->
+  <div class="paginacao" *ngIf="!carregando && totalPaginas > 1">
+
+    <button
+      class="pag-btn"
+      (click)="irParaPagina(paginaAtual - 1)"
+      [disabled]="paginaAtual === 1">
+      ◀
+    </button>
+
+    <ng-container *ngFor="let p of paginas">
+      <span *ngIf="p === -1" class="pag-reticencias">...</span>
+      <button
+        *ngIf="p !== -1"
+        class="pag-btn"
+        [class.ativa]="p === paginaAtual"
+        (click)="irParaPagina(p)">
+        {{ p }}
+      </button>
+    </ng-container>
+
+    <button
+      class="pag-btn"
+      (click)="irParaPagina(paginaAtual + 1)"
+      [disabled]="paginaAtual === totalPaginas">
+      ▶
+    </button>
+
+    <span class="pag-info">
+      Página {{ paginaAtual }} de {{ totalPaginas }}
+      ({{ chamadosFiltrados.length }} chamados)
+    </span>
+
   </div>
 
 </div>

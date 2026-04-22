@@ -34,6 +34,10 @@ export class DashboardComponent implements OnInit {
   instituicoes: any[] = [];
   carregando = true;
 
+  // PAGINAÇÃO
+  paginaAtual = 1;
+  itensPorPagina = 10;
+
   filtroAvancado = {
     protocolo: '',
     instituicao: '',
@@ -74,7 +78,7 @@ export class DashboardComponent implements OnInit {
     try {
       this.instituicoes = await this.api.get('/instituicoes');
     } catch (e) {
-      console.error('Erro ao carregar instituições:', e);
+      console.error('Erro:', e);
     }
   }
 
@@ -86,18 +90,17 @@ export class DashboardComponent implements OnInit {
       dataInicio: '',
       dataFim: ''
     };
+    this.paginaAtual = 1;
     this.cdr.detectChanges();
   }
 
   get chamadosFiltrados() {
     return this.chamados.filter(c => {
 
-      // FILTRO DE ABAS
       if (this.filtro === 'pendente' && c.status !== 'Pendente') return false;
       if (this.filtro === 'execucao' && c.status !== 'Em Execução') return false;
       if (this.filtro === 'concluido' && c.status !== 'Concluído') return false;
 
-      // FILTROS AVANÇADOS
       if (this.filtroAvancado.protocolo &&
         !c.protocolo.toLowerCase().includes(this.filtroAvancado.protocolo.toLowerCase())) {
         return false;
@@ -131,17 +134,55 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // PAGINAÇÃO
+  get totalPaginas() {
+    return Math.ceil(this.chamadosFiltrados.length / this.itensPorPagina);
+  }
+
+  get chamadosPaginados() {
+    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+    return this.chamadosFiltrados.slice(inicio, inicio + this.itensPorPagina);
+  }
+
+  get paginas() {
+    const total = this.totalPaginas;
+    const atual = this.paginaAtual;
+    const paginas: number[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) paginas.push(i);
+    } else {
+      paginas.push(1);
+      if (atual > 3) paginas.push(-1);
+      for (let i = Math.max(2, atual - 1); i <= Math.min(total - 1, atual + 1); i++) {
+        paginas.push(i);
+      }
+      if (atual < total - 2) paginas.push(-1);
+      paginas.push(total);
+    }
+
+    return paginas;
+  }
+
+  irParaPagina(pagina: number) {
+    if (pagina < 1 || pagina > this.totalPaginas) return;
+    this.paginaAtual = pagina;
+    this.cdr.detectChanges();
+  }
+
+  setFiltro(f: any) {
+    this.filtro = f;
+    this.paginaAtual = 1;
+    this.cdr.detectChanges();
+  }
+
   abrirDetalhe(id: number) {
     this.router.navigate(['/chamado', id]);
   }
 
   mudarVisualizacao(tipo: 'lista' | 'bloco') {
     this.visualizacao = tipo;
-  }
-
-  setFiltro(f: any) {
-    this.filtro = f;
-    this.cdr.detectChanges();
+    this.paginaAtual = 1;
   }
 
   getStatusClass(status: string) {
