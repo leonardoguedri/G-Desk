@@ -46,6 +46,11 @@
         <span>Páginas Externas</span>
       </a>
 
+      <a routerLink="/solicitantes" routerLinkActive="active">
+        <i class="fa-solid fa-user"></i>
+  <span> Solicitantes</span>
+</a>
+
       <a routerLink="/configuracoes" routerLinkActive="active">
         <i class="fa-solid fa-gear"></i>
         <span>Configurações</span>
@@ -83,18 +88,47 @@
           </button>
 
           <div class="notificacao-dropdown" *ngIf="mostrarNotificacoes">
-            <h4>Chamados Pendentes no Seu Setor</h4>
+            <!-- PESSOAIS -->
+            <div class="notif-secao">
+              <div class="notif-secao-header">
+                <h4>Minhas Atualizações</h4>
+                <button class="btn-todas-lidas"
+                  *ngIf="notificacaoService.totalPessoais > 0"
+                  (click)="marcarTodasLidas()">
+                  Marcar todas como lidas
+                </button>
+              </div>
 
-            <div *ngIf="notificacaoService.notificacoes.length === 0">
-              <p>Nenhum chamado pendente.</p>
+              <div *ngIf="notificacaoService.notificacoes.length === 0">
+                <p class="notif-vazio">Nenhuma atualização.</p>
+              </div>
+
+              <div class="notificacao-item"
+                *ngFor="let n of notificacaoService.notificacoes"
+                (click)="abrirChamado(n.chamado_id, n.id)">
+                <div class="notif-tipo {{ n.tipo }}">{{ n.tipo }}</div>
+                <strong>{{ n.protocolo }}</strong>
+                <p>{{ n.descricao }}</p>
+                <small>{{ n.data }}</small>
+              </div>
             </div>
 
-            <div class="notificacao-item"
-              *ngFor="let n of notificacaoService.notificacoes">
-              <strong>{{ n.protocolo }}</strong>
-              <p>{{ n.titulo }}</p>
-              <small>{{ n.data_criacao }}</small>
+            <!-- SETOR -->
+            <div class="notif-secao" *ngIf="notificacaoService.totalSetor > 0">
+              <div class="notif-secao-header">
+                <h4>Novos no Seu Setor</h4>
+              </div>
+
+              <div class="notificacao-item"
+                *ngFor="let n of notificacaoService.notificacoesSetor"
+                (click)="abrirChamado(n.id, null)">
+                <div class="notif-tipo abertura">novo</div>
+                <strong>{{ n.protocolo }}</strong>
+                <p>{{ n.titulo }}</p>
+                <small>{{ n.data_criacao }}</small>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -108,7 +142,5 @@
     </main>
 
   </div>
-
-  
 
 </div>

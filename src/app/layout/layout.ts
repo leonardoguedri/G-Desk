@@ -40,6 +40,18 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.sidebarMinimizada = !this.sidebarMinimizada;
   }
 
+    async marcarTodasLidas() {
+    await this.notificacaoService.marcarTodasLidas(this.usuarioLogado.id);
+  }
+
+  abrirChamado(chamado_id: number, notificacao_id: number | null) {
+    if (notificacao_id) {
+      this.notificacaoService.marcarComoLida(notificacao_id, this.usuarioLogado.id);
+    }
+    this.mostrarNotificacoes = false;
+    this.router.navigate(['/chamado', chamado_id]);
+  }
+
   sair() {
     this.notificacaoService.parar();
     this.authService.logout();

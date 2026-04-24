@@ -33,10 +33,23 @@
   <div class="card">
     <h3>Solicitante</h3>
     <div class="grid-3">
-      <div>
-        <label>Nome</label>
-        <input type="text" [(ngModel)]="form.solicitante_nome">
-      </div>
+      <div style="position: relative;">
+  <label>Nome</label>
+  <input type="text"
+    [(ngModel)]="form.solicitante_nome"
+    (input)="buscarSolicitante($event)"
+    placeholder="Digite o nome do solicitante"
+    autocomplete="off">
+
+  <div class="sugestoes" *ngIf="mostrarSugestoes && solicitantesBusca.length > 0">
+    <div class="sugestao-item"
+      *ngFor="let s of solicitantesBusca"
+      (click)="selecionarSolicitante(s)">
+      <strong>{{ s.nome }}</strong>
+      <small>{{ s.instituicao }} — {{ s.email }}</small>
+    </div>
+  </div>
+</div>
       <div>
         <label>Email</label>
         <input type="email" [(ngModel)]="form.solicitante_email">
@@ -68,15 +81,7 @@
   <div class="card">
     <h3>Identificação da Solicitação</h3>
     <div class="grid-3">
-      <div>
-        <label>Categoria</label>
-        <select (change)="onCategoriaChange($event)">
-          <option value="">Selecione</option>
-          <option *ngFor="let c of categorias" [value]="c.nome">
-            {{ c.nome }}
-          </option>
-        </select>
-      </div>
+      
       <div>
         <label>Prioridade</label>
         <select [(ngModel)]="form.prioridade">
@@ -86,14 +91,20 @@
         </select>
       </div>
       <div>
-        <label>Setor Destino</label>
-        <select [(ngModel)]="form.setor_destino">
-          <option value="">Selecione</option>
-          <option *ngFor="let s of setores" [value]="s.nome">
-            {{ s.nome }}
-          </option>
-        </select>
-      </div>
+  <label>Setor Destino</label>
+  <select (change)="onSetorChange($event)">
+    <option value="">Selecione</option>
+    <option *ngFor="let s of setores" [value]="s.nome">{{ s.nome }}</option>
+  </select>
+</div>
+
+<div>
+  <label>Categoria</label>
+  <select (change)="onCategoriaChange($event)">
+    <option value="">Selecione</option>
+    <option *ngFor="let c of categoriasFiltradas" [value]="c.nome">{{ c.nome }}</option>
+  </select>
+</div>
     </div>
   </div>
 
@@ -169,5 +180,7 @@
       {{ loading ? 'Salvando...' : 'Abrir Chamado' }}
     </button>
   </div>
+
+  
 
 </div>

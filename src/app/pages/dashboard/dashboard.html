@@ -2,10 +2,10 @@
 
   <div class="top-bar">
     <div class="filtros">
-      <button (click)="setFiltro('geral')" [class.active]="filtro === 'geral'">Geral</button>
-      <button (click)="setFiltro('pendente')" [class.active]="filtro === 'pendente'">Pendentes</button>
-      <button (click)="setFiltro('execucao')" [class.active]="filtro === 'execucao'">Em execução</button>
-      <button (click)="setFiltro('concluido')" [class.active]="filtro === 'concluido'">Concluídos</button>
+      <button (click)="setFiltroAba('geral')" [class.active]="filtroAba === 'geral'">Geral</button>
+      <button (click)="setFiltroAba('pendente')" [class.active]="filtroAba === 'pendente'">Pendentes</button>
+      <button (click)="setFiltroAba('execucao')" [class.active]="filtroAba === 'execucao'">Em execução</button>
+      <button (click)="setFiltroAba('concluido')" [class.active]="filtroAba === 'concluido'">Concluídos</button>
     </div>
 
     <div class="acoes">
@@ -21,36 +21,43 @@
 
   <!-- FILTROS AVANÇADOS -->
   <div class="filtros-avancados" *ngIf="filtrosAbertos">
-    <div class="filtros-grid">
-      <div>
-        <label>Protocolo</label>
-        <input type="text" [(ngModel)]="filtroAvancado.protocolo"
-          placeholder="Digite o protocolo">
-      </div>
-      <div>
-        <label>Instituição</label>
-        <select [(ngModel)]="filtroAvancado.instituicao">
-          <option value="">Todas</option>
-          <option *ngFor="let i of instituicoes" [value]="i.nome">{{ i.nome }}</option>
+    <div class="filtro-linha">
+
+      <div class="filtro-campo">
+        <label>Tipo de Filtro</label>
+        <select [(ngModel)]="campoFiltro">
+          <option value="">Selecione o filtro</option>
+          <option *ngFor="let op of opcoesFiltro" [value]="op.campo">
+            {{ op.label }}
+          </option>
         </select>
       </div>
-      <div>
-        <label>Categoria</label>
-        <input type="text" [(ngModel)]="filtroAvancado.categoria"
-          placeholder="Digite a categoria">
+
+      <div class="filtro-valor" *ngIf="campoFiltro && !isFiltroData">
+        <label>Pesquisar</label>
+        <input type="text" [(ngModel)]="valorFiltro"
+          placeholder="Digite para pesquisar..."
+          (keyup.enter)="pesquisar()">
       </div>
-      <div>
-        <label>Data Início</label>
-        <input type="date" [(ngModel)]="filtroAvancado.dataInicio">
+
+      <div class="filtro-datas" *ngIf="isFiltroData">
+        <div>
+          <label>Data Início</label>
+          <input type="date" [(ngModel)]="dataInicio">
+        </div>
+        <div>
+          <label>Data Fim</label>
+          <input type="date" [(ngModel)]="dataFim">
+        </div>
       </div>
-      <div>
-        <label>Data Fim</label>
-        <input type="date" [(ngModel)]="filtroAvancado.dataFim">
-      </div>
+
       <div class="filtro-acoes">
+        <button class="btn-pesquisar" (click)="pesquisar()">Pesquisar</button>
         <button class="btn-limpar" (click)="limparFiltros()">Limpar</button>
       </div>
+
     </div>
+
     <p class="resultado-filtro">
       {{ chamadosFiltrados.length }} chamado(s) encontrado(s)
     </p>
@@ -81,7 +88,7 @@
       <span>{{ c.instituicao }}</span>
       <span>{{ c.setor_destino }}</span>
       <span>{{ c.categoria }}</span>
-      <span>{{ c.responsavel || '-' }}</span>
+      <span>{{ c.responsavel_nome || '-' }}</span>
       <span>{{ c.data_criacao }}</span>
     </div>
   </div>
@@ -101,37 +108,20 @@
 
   <!-- PAGINAÇÃO -->
   <div class="paginacao" *ngIf="!carregando && totalPaginas > 1">
-
-    <button
-      class="pag-btn"
-      (click)="irParaPagina(paginaAtual - 1)"
-      [disabled]="paginaAtual === 1">
-      ◀
-    </button>
+    <button class="pag-btn" (click)="irParaPagina(paginaAtual - 1)" [disabled]="paginaAtual === 1">◀</button>
 
     <ng-container *ngFor="let p of paginas">
       <span *ngIf="p === -1" class="pag-reticencias">...</span>
-      <button
-        *ngIf="p !== -1"
-        class="pag-btn"
-        [class.ativa]="p === paginaAtual"
-        (click)="irParaPagina(p)">
-        {{ p }}
-      </button>
+      <button *ngIf="p !== -1" class="pag-btn" [class.ativa]="p === paginaAtual"
+        (click)="irParaPagina(p)">{{ p }}</button>
     </ng-container>
 
-    <button
-      class="pag-btn"
-      (click)="irParaPagina(paginaAtual + 1)"
-      [disabled]="paginaAtual === totalPaginas">
-      ▶
-    </button>
+    <button class="pag-btn" (click)="irParaPagina(paginaAtual + 1)" [disabled]="paginaAtual === totalPaginas">▶</button>
 
     <span class="pag-info">
       Página {{ paginaAtual }} de {{ totalPaginas }}
       ({{ chamadosFiltrados.length }} chamados)
     </span>
-
   </div>
 
 </div>

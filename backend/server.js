@@ -14,118 +14,201 @@ app.use('/uploads', express.static('uploads'));
 
 const db = new sqlite3.Database('./database.db');
 
-// TABELAS
-db.run(`CREATE TABLE IF NOT EXISTS usuarios (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT, email TEXT UNIQUE,
-  senha TEXT, perfil TEXT, setor TEXT
-)`);
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT, email TEXT UNIQUE,
+    senha TEXT, perfil TEXT, setor TEXT,
+    ultimo_acesso TEXT
+  )`);
 
-db.run(`ALTER TABLE usuarios ADD COLUMN setor TEXT`, () => {});
+  db.run(`ALTER TABLE usuarios ADD COLUMN setor TEXT`, () => {});
+  db.run(`ALTER TABLE usuarios ADD COLUMN ultimo_acesso TEXT`, () => {});
 
-db.run(`CREATE TABLE IF NOT EXISTS chamados (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  protocolo TEXT, titulo TEXT, descricao TEXT,
-  categoria TEXT, status TEXT DEFAULT 'Pendente',
-  prioridade TEXT DEFAULT 'Normal', canal TEXT,
-  instituicao TEXT, unidade TEXT,
-  solicitante_nome TEXT, solicitante_email TEXT,
-  solicitante_telefone TEXT, setor_destino TEXT,
-  usuario_id INTEGER, responsavel_id INTEGER,
-  data_criacao TEXT,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS chamados (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    protocolo TEXT, titulo TEXT, descricao TEXT,
+    categoria TEXT, status TEXT DEFAULT 'Pendente',
+    prioridade TEXT DEFAULT 'Normal', canal TEXT,
+    instituicao TEXT, unidade TEXT,
+    solicitante_nome TEXT, solicitante_email TEXT,
+    solicitante_telefone TEXT, setor_destino TEXT,
+    usuario_id INTEGER, responsavel_id INTEGER,
+    responsavel_nome TEXT, responsavel_email TEXT,
+    criador_nome TEXT, setor_abertura TEXT,
+    data_criacao TEXT, data_conclusao TEXT,
+    sla_resposta TEXT, sla_solucao TEXT,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+  )`);
 
-db.run(`CREATE TABLE IF NOT EXISTS movimentacoes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  chamado_id INTEGER, usuario_nome TEXT,
-  tipo TEXT, descricao TEXT, data TEXT,
-  FOREIGN KEY (chamado_id) REFERENCES chamados(id)
-)`);
+  db.run(`ALTER TABLE chamados ADD COLUMN criador_nome TEXT`, () => {});
+  db.run(`ALTER TABLE chamados ADD COLUMN setor_abertura TEXT`, () => {});
+  db.run(`ALTER TABLE chamados ADD COLUMN responsavel_nome TEXT`, () => {});
+  db.run(`ALTER TABLE chamados ADD COLUMN responsavel_email TEXT`, () => {});
+  db.run(`ALTER TABLE chamados ADD COLUMN data_conclusao TEXT`, () => {});
+  db.run(`ALTER TABLE chamados ADD COLUMN sla_resposta TEXT`, () => {});
+  db.run(`ALTER TABLE chamados ADD COLUMN sla_solucao TEXT`, () => {});
 
-db.run(`CREATE TABLE IF NOT EXISTS comentarios (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  chamado_id INTEGER, usuario_nome TEXT,
-  texto TEXT, data TEXT,
-  FOREIGN KEY (chamado_id) REFERENCES chamados(id)
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS movimentacoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chamado_id INTEGER, usuario_nome TEXT,
+    tipo TEXT, descricao TEXT, data TEXT,
+    FOREIGN KEY (chamado_id) REFERENCES chamados(id)
+  )`);
 
-db.run(`CREATE TABLE IF NOT EXISTS anexos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  chamado_id INTEGER, nome TEXT,
-  caminho TEXT, data TEXT,
-  FOREIGN KEY (chamado_id) REFERENCES chamados(id)
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS comentarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chamado_id INTEGER, usuario_nome TEXT,
+    texto TEXT, data TEXT,
+    FOREIGN KEY (chamado_id) REFERENCES chamados(id)
+  )`);
 
-db.run(`CREATE TABLE IF NOT EXISTS setores (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS anexos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chamado_id INTEGER, nome TEXT,
+    caminho TEXT, data TEXT,
+    FOREIGN KEY (chamado_id) REFERENCES chamados(id)
+  )`);
 
-db.run(`CREATE TABLE IF NOT EXISTS instituicoes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT, cidade TEXT
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS setores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT
+  )`);
 
-db.run(`CREATE TABLE IF NOT EXISTS categorias (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT, sla_resposta TEXT, sla_solucao TEXT
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS instituicoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT, cidade TEXT
+  )`);
 
-// UPLOAD
+  db.run(`CREATE TABLE IF NOT EXISTS categorias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT, sla_resposta TEXT, sla_solucao TEXT,
+    setor_id INTEGER,
+    FOREIGN KEY (setor_id) REFERENCES setores(id)
+  )`);
+
+  db.run(`ALTER TABLE categorias ADD COLUMN setor_id INTEGER`, () => {});
+
+  db.run(`CREATE TABLE IF NOT EXISTS notificacoes_usuario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER, chamado_id INTEGER,
+    protocolo TEXT, titulo TEXT,
+    tipo TEXT, descricao TEXT,
+    lida INTEGER DEFAULT 0, data TEXT,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (chamado_id) REFERENCES chamados(id)
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS solicitantes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT, email TEXT, telefone TEXT,
+    instituicao TEXT, unidade TEXT,
+    observacoes TEXT,
+    data_cadastro TEXT
+  )`);
+});
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
 const upload = multer({ storage });
 
-// MIDDLEWARE JWT
+// INATIVIDADE EM MINUTOS PARA TESTES (padrão: 40 dias = 57600 minutos)
+const INATIVIDADE_MINUTOS = process.env.INATIVIDADE_MINUTOS
+  ? parseInt(process.env.INATIVIDADE_MINUTOS)
+  : 57600;
+
+function limparUsuariosInativos() {
+  const limite = new Date();
+  limite.setMinutes(limite.getMinutes() - INATIVIDADE_MINUTOS);
+  const dataLimite = limite.toISOString();
+
+  db.run(
+    `DELETE FROM usuarios WHERE ultimo_acesso < ? AND perfil != 'admin'`,
+    [dataLimite],
+    function (err) {
+      if (err) return;
+      if (this.changes > 0) {
+        console.log(`${this.changes} usuário(s) inativo(s) removido(s).`);
+      }
+    }
+  );
+}
+
+setInterval(limparUsuariosInativos, 60 * 60 * 1000);
+
 function autenticar(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth) return res.status(401).json({ erro: 'Token não fornecido' });
-
   const token = auth.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, SECRET);
-    req.usuario = decoded;
+    req.usuario = jwt.verify(token, SECRET);
     next();
   } catch (e) {
     return res.status(401).json({ erro: 'Token inválido' });
   }
 }
 
-// ROTA TESTE
+function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuario_id) {
+  db.get(`SELECT id, protocolo, titulo, usuario_id, responsavel_id FROM chamados WHERE id=?`,
+    [chamado_id], (err, chamado) => {
+      if (err || !chamado) return;
+      const data = new Date().toLocaleString('pt-BR');
+
+      if (chamado.usuario_id && chamado.usuario_id !== excluir_usuario_id) {
+        db.run(
+          `INSERT INTO notificacoes_usuario
+           (usuario_id, chamado_id, protocolo, titulo, tipo, descricao, data)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [chamado.usuario_id, chamado_id, chamado.protocolo,
+           chamado.titulo, tipo, descricao, data]
+        );
+      }
+
+      if (chamado.responsavel_id && chamado.responsavel_id !== excluir_usuario_id
+          && chamado.responsavel_id !== chamado.usuario_id) {
+        db.run(
+          `INSERT INTO notificacoes_usuario
+           (usuario_id, chamado_id, protocolo, titulo, tipo, descricao, data)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [chamado.responsavel_id, chamado_id, chamado.protocolo,
+           chamado.titulo, tipo, descricao, data]
+        );
+      }
+    }
+  );
+}
+
 app.get('/', (req, res) => res.send('API rodando'));
 
-// LOGIN
 app.post('/login', (req, res) => {
   const { email, senha } = req.body;
-
-  db.get(`SELECT * FROM usuarios WHERE email = ?`, [email], async (err, user) => {
+  db.get(`SELECT * FROM usuarios WHERE email=?`, [email], async (err, user) => {
     if (err) return res.status(500).json(err);
     if (!user) return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
-
-    const senhaValida = await bcrypt.compare(senha, user.senha);
-    if (!senhaValida) return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
-
+    const ok = await bcrypt.compare(senha, user.senha);
+    if (!ok) return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
+    const agora = new Date().toISOString();
+    db.run(`UPDATE usuarios SET ultimo_acesso=? WHERE id=?`, [agora, user.id]);
     const token = jwt.sign(
-      { id: user.id, nome: user.nome, perfil: user.perfil, setor: user.setor },
-      SECRET,
-      { expiresIn: '8h' }
+      { id: user.id, nome: user.nome, perfil: user.perfil, setor: user.setor, email: user.email },
+      SECRET, { expiresIn: '8h' }
     );
-
-    res.json({ token, usuario: { id: user.id, nome: user.nome, email: user.email,  perfil: user.perfil, setor: user.setor } });
+    res.json({
+      token,
+      usuario: { id: user.id, nome: user.nome, perfil: user.perfil, setor: user.setor, email: user.email }
+    });
   });
 });
 
-// CRIAR USUÁRIO (com senha criptografada)
 app.post('/usuarios', async (req, res) => {
   const { nome, email, senha, perfil, setor } = req.body;
-  const senhaCriptografada = await bcrypt.hash(senha, 10);
-
+  const hash = await bcrypt.hash(senha, 10);
+  const agora = new Date().toISOString();
   db.run(
-    `INSERT INTO usuarios (nome, email, senha, perfil, setor) VALUES (?, ?, ?, ?, ?)`,
-    [nome, email, senhaCriptografada, perfil, setor],
+    `INSERT INTO usuarios (nome, email, senha, perfil, setor, ultimo_acesso) VALUES (?, ?, ?, ?, ?, ?)`,
+    [nome, email, hash, perfil, setor, agora],
     function (err) {
       if (err) return res.status(500).json(err);
       res.json({ id: this.lastID });
@@ -133,75 +216,143 @@ app.post('/usuarios', async (req, res) => {
   );
 });
 
-// LISTAR USUÁRIOS
 app.get('/usuarios', autenticar, (req, res) => {
-  db.all(`SELECT id, nome, email, perfil, setor FROM usuarios`, [], (err, rows) => {
+  db.all(`SELECT id, nome, email, perfil, setor, ultimo_acesso FROM usuarios`, [], (err, rows) => {
     if (err) return res.status(500).json(err);
     res.json(rows);
   });
 });
 
-// DELETAR USUÁRIO
+app.put('/usuarios/:id', autenticar, async (req, res) => {
+  const { nome, email, senha, perfil, setor } = req.body;
+  if (senha) {
+    const hash = await bcrypt.hash(senha, 10);
+    db.run(
+      `UPDATE usuarios SET nome=?, email=?, senha=?, perfil=?, setor=? WHERE id=?`,
+      [nome, email, hash, perfil, setor, req.params.id],
+      function (err) {
+        if (err) return res.status(500).json(err);
+        res.json({ sucesso: true });
+      }
+    );
+  } else {
+    db.run(
+      `UPDATE usuarios SET nome=?, email=?, perfil=?, setor=? WHERE id=?`,
+      [nome, email, perfil, setor, req.params.id],
+      function (err) {
+        if (err) return res.status(500).json(err);
+        res.json({ sucesso: true });
+      }
+    );
+  }
+});
+
 app.delete('/usuarios/:id', autenticar, (req, res) => {
-  db.run(`DELETE FROM usuarios WHERE id = ?`, [req.params.id], function (err) {
+  db.run(`DELETE FROM usuarios WHERE id=?`, [req.params.id], function (err) {
     if (err) return res.status(500).json(err);
     res.json({ sucesso: true });
   });
 });
 
-// CRIAR CHAMADO
+// TESTAR LIMPEZA MANUAL
+app.post('/admin/limpar-inativos', autenticar, (req, res) => {
+  limparUsuariosInativos();
+  res.json({ sucesso: true, mensagem: 'Limpeza executada' });
+});
+
 app.post('/chamados', autenticar, (req, res) => {
   const {
     titulo, descricao, categoria, prioridade, canal,
     instituicao, unidade, solicitante_nome, solicitante_email,
-    solicitante_telefone, setor_destino, usuario_id
+    solicitante_telefone, setor_destino, usuario_id,
+    sla_resposta, sla_solucao
   } = req.body;
 
   const protocolo = `${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
   const data_criacao = new Date().toLocaleDateString('pt-BR');
+  const criador_nome = req.usuario.nome;
+  const setor_abertura = req.usuario.setor || '-';
 
   db.run(
     `INSERT INTO chamados (
       protocolo, titulo, descricao, categoria, prioridade, canal,
       instituicao, unidade, solicitante_nome, solicitante_email,
-      solicitante_telefone, setor_destino, usuario_id, data_criacao
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      solicitante_telefone, setor_destino, usuario_id, data_criacao,
+      criador_nome, setor_abertura, sla_resposta, sla_solucao
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [protocolo, titulo, descricao, categoria, prioridade, canal,
      instituicao, unidade, solicitante_nome, solicitante_email,
-     solicitante_telefone, setor_destino, usuario_id, data_criacao],
+     solicitante_telefone, setor_destino, usuario_id, data_criacao,
+     criador_nome, setor_abertura, sla_resposta || '', sla_solucao || ''],
     function (err) {
       if (err) return res.status(500).json(err);
       db.run(
         `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
          VALUES (?, ?, ?, ?, ?)`,
-        [this.lastID, req.usuario.nome, 'abertura', 'Chamado aberto', data_criacao]
+        [this.lastID, criador_nome, 'abertura', 'Chamado aberto', data_criacao]
       );
       res.json({ id: this.lastID, protocolo });
     }
   );
 });
 
-// BUSCAR CHAMADO POR ID
 app.get('/chamados/:id', autenticar, (req, res) => {
-  db.get(`SELECT * FROM chamados WHERE id = ?`, [req.params.id], (err, row) => {
+  db.get(`SELECT * FROM chamados WHERE id=?`, [req.params.id], (err, row) => {
     if (err) return res.status(500).json(err);
-    if (!row) return res.status(404).json({ erro: 'Chamado não encontrado' });
+    if (!row) return res.status(404).json({ erro: 'Não encontrado' });
     res.json(row);
   });
 });
 
-// LISTAR CHAMADOS
 app.get('/chamados', autenticar, (req, res) => {
-  db.all(`SELECT * FROM chamados ORDER BY id DESC`, [], (err, rows) => {
+  const { campo, valor, data_inicio, data_fim } = req.query;
+
+let query = `SELECT * FROM chamados WHERE 1=1`;
+const params = [];
+
+if (campo && valor && typeof campo === 'string') {
+  const camposPermitidos = {
+    protocolo: 'protocolo',
+    setor_destino: 'setor_destino',
+    canal: 'canal',
+    categoria: 'categoria',
+    solicitante_nome: 'solicitante_nome',
+    criador_nome: 'criador_nome',
+    setor_abertura: 'setor_abertura',
+    status: 'status',
+    titulo: 'titulo',
+    instituicao: 'instituicao',
+    unidade: 'unidade',
+    responsavel_nome: 'responsavel_nome'
+  };
+
+  if (Object.prototype.hasOwnProperty.call(camposPermitidos, campo)) {
+    query += ` AND ${camposPermitidos[campo]} LIKE ?`;
+    params.push(`%${valor}%`);
+  }
+}
+
+  if (data_inicio) {
+    query += ` AND data_criacao >= ?`;
+    params.push(data_inicio);
+  }
+
+  if (data_fim) {
+    query += ` AND data_criacao <= ?`;
+    params.push(data_fim);
+  }
+
+  query += ` ORDER BY id DESC`;
+
+  db.all(query, params, (err, rows) => {
     if (err) return res.status(500).json(err);
     res.json(rows);
   });
 });
 
-// CHAMADOS POR SETOR
 app.get('/chamados/setor/:setor', autenticar, (req, res) => {
   db.all(
-    `SELECT * FROM chamados WHERE setor_destino = ? ORDER BY id DESC`,
+    `SELECT * FROM chamados WHERE setor_destino=? ORDER BY id DESC`,
     [req.params.setor],
     (err, rows) => {
       if (err) return res.status(500).json(err);
@@ -210,52 +361,93 @@ app.get('/chamados/setor/:setor', autenticar, (req, res) => {
   );
 });
 
-// ASSUMIR CHAMADO
+app.put('/chamados/:id/redirecionar', autenticar, (req, res) => {
+  const { setor_destino, categoria, usuario_nome } = req.body;
+  const data = new Date().toLocaleString('pt-BR');
+  db.run(
+    `UPDATE chamados SET setor_destino=?, categoria=? WHERE id=?`,
+    [setor_destino, categoria, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      db.run(
+        `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
+         VALUES (?, ?, ?, ?, ?)`,
+        [req.params.id, usuario_nome, 'redirecionamento',
+         `Chamado redirecionado para ${setor_destino}`, data]
+      );
+      notificarCriadorEResponsavel(req.params.id, 'status',
+        `Chamado redirecionado para ${setor_destino} por ${usuario_nome}`, null);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
 app.put('/chamados/:id/assumir', autenticar, (req, res) => {
-  const { id } = req.params;
-  const { usuario_id, usuario_nome } = req.body;
+  const { usuario_id, usuario_nome, usuario_email } = req.body;
   const data = new Date().toLocaleString('pt-BR');
-
   db.run(
-    `UPDATE chamados SET responsavel_id = ?, status = 'Em Execução' WHERE id = ?`,
-    [usuario_id, id],
+    `UPDATE chamados SET responsavel_id=?, responsavel_nome=?,
+     responsavel_email=?, status='Em Execução' WHERE id=?`,
+    [usuario_id, usuario_nome, usuario_email, req.params.id],
     function (err) {
       if (err) return res.status(500).json(err);
       db.run(
         `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
          VALUES (?, ?, ?, ?, ?)`,
-        [id, usuario_nome, 'assumido', `Chamado assumido por ${usuario_nome}`, data]
+        [req.params.id, usuario_nome, 'assumido',
+         `Chamado assumido por ${usuario_nome}`, data]
       );
+      notificarCriadorEResponsavel(req.params.id, 'status',
+        `Seu chamado foi assumido por ${usuario_nome}`, usuario_id);
       res.json({ sucesso: true });
     }
   );
 });
 
-// CONCLUIR CHAMADO
 app.put('/chamados/:id/concluir', autenticar, (req, res) => {
-  const { id } = req.params;
-  const { usuario_nome } = req.body;
+  const { usuario_nome, texto_conclusao } = req.body;
   const data = new Date().toLocaleString('pt-BR');
-
   db.run(
-    `UPDATE chamados SET status = 'Concluído' WHERE id = ?`,
-    [id],
+    `UPDATE chamados SET status='Concluído', data_conclusao=? WHERE id=?`,
+    [data, req.params.id],
     function (err) {
       if (err) return res.status(500).json(err);
       db.run(
         `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
          VALUES (?, ?, ?, ?, ?)`,
-        [id, usuario_nome, 'concluido', `Chamado concluído por ${usuario_nome}`, data]
+        [req.params.id, usuario_nome, 'conclusao', texto_conclusao, data]
       );
+      notificarCriadorEResponsavel(req.params.id, 'concluido',
+        `Chamado concluído por ${usuario_nome}`, null);
       res.json({ sucesso: true });
     }
   );
 });
 
-// MOVIMENTAÇÕES
+app.put('/chamados/:id/rejeitar', autenticar, (req, res) => {
+  const { usuario_nome, motivo_rejeicao } = req.body;
+  const data = new Date().toLocaleString('pt-BR');
+  db.run(
+    `UPDATE chamados SET status='Pendente', responsavel_id=NULL,
+     responsavel_nome=NULL, responsavel_email=NULL WHERE id=?`,
+    [req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      db.run(
+        `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
+         VALUES (?, ?, ?, ?, ?)`,
+        [req.params.id, usuario_nome, 'rejeicao', motivo_rejeicao, data]
+      );
+      notificarCriadorEResponsavel(req.params.id, 'status',
+        `Chamado rejeitado por ${usuario_nome}: ${motivo_rejeicao}`, null);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
 app.get('/chamados/:id/movimentacoes', autenticar, (req, res) => {
   db.all(
-    `SELECT * FROM movimentacoes WHERE chamado_id = ? ORDER BY id ASC`,
+    `SELECT * FROM movimentacoes WHERE chamado_id=? ORDER BY id ASC`,
     [req.params.id],
     (err, rows) => {
       if (err) return res.status(500).json(err);
@@ -264,11 +456,9 @@ app.get('/chamados/:id/movimentacoes', autenticar, (req, res) => {
   );
 });
 
-// COMENTÁRIOS
 app.post('/chamados/:id/comentarios', autenticar, (req, res) => {
   const { usuario_nome, texto } = req.body;
   const data = new Date().toLocaleString('pt-BR');
-
   db.run(
     `INSERT INTO comentarios (chamado_id, usuario_nome, texto, data) VALUES (?, ?, ?, ?)`,
     [req.params.id, usuario_nome, texto, data],
@@ -279,6 +469,8 @@ app.post('/chamados/:id/comentarios', autenticar, (req, res) => {
          VALUES (?, ?, ?, ?, ?)`,
         [req.params.id, usuario_nome, 'comentario', 'Comentário adicionado', data]
       );
+      notificarCriadorEResponsavel(req.params.id, 'comentario',
+        `${usuario_nome} adicionou um comentário`, null);
       res.json({ id: this.lastID });
     }
   );
@@ -286,7 +478,7 @@ app.post('/chamados/:id/comentarios', autenticar, (req, res) => {
 
 app.get('/chamados/:id/comentarios', autenticar, (req, res) => {
   db.all(
-    `SELECT * FROM comentarios WHERE chamado_id = ? ORDER BY id ASC`,
+    `SELECT * FROM comentarios WHERE chamado_id=? ORDER BY id ASC`,
     [req.params.id],
     (err, rows) => {
       if (err) return res.status(500).json(err);
@@ -295,13 +487,10 @@ app.get('/chamados/:id/comentarios', autenticar, (req, res) => {
   );
 });
 
-// ANEXOS
 app.post('/chamados/:id/anexos', autenticar, upload.single('arquivo'), (req, res) => {
   const { usuario_nome } = req.body;
   const data = new Date().toLocaleString('pt-BR');
-
-  if (!req.file) return res.status(400).json({ erro: 'Nenhum arquivo enviado' });
-
+  if (!req.file) return res.status(400).json({ erro: 'Nenhum arquivo' });
   db.run(
     `INSERT INTO anexos (chamado_id, nome, caminho, data) VALUES (?, ?, ?, ?)`,
     [req.params.id, req.file.originalname, req.file.filename, data],
@@ -310,8 +499,11 @@ app.post('/chamados/:id/anexos', autenticar, upload.single('arquivo'), (req, res
       db.run(
         `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
          VALUES (?, ?, ?, ?, ?)`,
-        [req.params.id, usuario_nome, 'anexo', `Anexo: ${req.file?.originalname}`, data]
+        [req.params.id, usuario_nome, 'anexo',
+         `Anexo adicionado: ${req.file?.originalname}`, data]
       );
+      notificarCriadorEResponsavel(req.params.id, 'anexo',
+        `${usuario_nome} adicionou um anexo`, null);
       res.json({ id: this.lastID, nome: req.file?.originalname });
     }
   );
@@ -319,7 +511,7 @@ app.post('/chamados/:id/anexos', autenticar, upload.single('arquivo'), (req, res
 
 app.get('/chamados/:id/anexos', autenticar, (req, res) => {
   db.all(
-    `SELECT * FROM anexos WHERE chamado_id = ? ORDER BY id ASC`,
+    `SELECT * FROM anexos WHERE chamado_id=? ORDER BY id ASC`,
     [req.params.id],
     (err, rows) => {
       if (err) return res.status(500).json(err);
@@ -328,7 +520,108 @@ app.get('/chamados/:id/anexos', autenticar, (req, res) => {
   );
 });
 
-// SETORES
+app.get('/notificacoes/:usuario_id', autenticar, (req, res) => {
+  db.all(
+    `SELECT * FROM notificacoes_usuario
+     WHERE usuario_id=? AND lida=0
+     ORDER BY id DESC LIMIT 20`,
+    [req.params.usuario_id],
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    }
+  );
+});
+
+app.put('/notificacoes/:id/lida', autenticar, (req, res) => {
+  db.run(`UPDATE notificacoes_usuario SET lida=1 WHERE id=?`,
+    [req.params.id], function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
+app.put('/notificacoes/usuario/:usuario_id/todas-lidas', autenticar, (req, res) => {
+  db.run(
+    `UPDATE notificacoes_usuario SET lida=1 WHERE usuario_id=?`,
+    [req.params.usuario_id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
+app.get('/notificacoes-setor/:usuario_id', autenticar, (req, res) => {
+  db.get(`SELECT setor FROM usuarios WHERE id=?`, [req.params.usuario_id], (err, user) => {
+    if (err) return res.status(500).json(err);
+    if (!user || !user.setor) return res.json([]);
+    db.all(
+      `SELECT id, protocolo, titulo, data_criacao FROM chamados
+       WHERE setor_destino=? AND status='Pendente' ORDER BY id DESC LIMIT 10`,
+      [user.setor],
+      (err, rows) => {
+        if (err) return res.status(500).json(err);
+        res.json(rows);
+      }
+    );
+  });
+});
+
+// SOLICITANTES
+app.get('/solicitantes', autenticar, (req, res) => {
+  const { busca } = req.query;
+  if (busca) {
+    db.all(
+      `SELECT * FROM solicitantes WHERE nome LIKE ? OR email LIKE ? ORDER BY nome ASC`,
+      [`%${busca}%`, `%${busca}%`],
+      (err, rows) => {
+        if (err) return res.status(500).json(err);
+        res.json(rows);
+      }
+    );
+  } else {
+    db.all(`SELECT * FROM solicitantes ORDER BY nome ASC`, [], (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    });
+  }
+});
+
+app.post('/solicitantes', autenticar, (req, res) => {
+  const { nome, email, telefone, instituicao, unidade, observacoes } = req.body;
+  const data_cadastro = new Date().toLocaleDateString('pt-BR');
+  db.run(
+    `INSERT INTO solicitantes (nome, email, telefone, instituicao, unidade, observacoes, data_cadastro)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [nome, email, telefone, instituicao, unidade, observacoes, data_cadastro],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ id: this.lastID });
+    }
+  );
+});
+
+app.put('/solicitantes/:id', autenticar, (req, res) => {
+  const { nome, email, telefone, instituicao, unidade, observacoes } = req.body;
+  db.run(
+    `UPDATE solicitantes SET nome=?, email=?, telefone=?, instituicao=?, unidade=?, observacoes=? WHERE id=?`,
+    [nome, email, telefone, instituicao, unidade, observacoes, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
+app.delete('/solicitantes/:id', autenticar, (req, res) => {
+  db.run(`DELETE FROM solicitantes WHERE id=?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json(err);
+    res.json({ sucesso: true });
+  });
+});
+
 app.get('/setores', autenticar, (req, res) => {
   db.all(`SELECT * FROM setores`, [], (err, rows) => {
     if (err) return res.status(500).json(err);
@@ -343,14 +636,23 @@ app.post('/setores', autenticar, (req, res) => {
   });
 });
 
+app.put('/setores/:id', autenticar, (req, res) => {
+  db.run(`UPDATE setores SET nome=? WHERE id=?`,
+    [req.body.nome, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
 app.delete('/setores/:id', autenticar, (req, res) => {
-  db.run(`DELETE FROM setores WHERE id = ?`, [req.params.id], function (err) {
+  db.run(`DELETE FROM setores WHERE id=?`, [req.params.id], function (err) {
     if (err) return res.status(500).json(err);
     res.json({ sucesso: true });
   });
 });
 
-// INSTITUIÇÕES
 app.get('/instituicoes', autenticar, (req, res) => {
   db.all(`SELECT * FROM instituicoes`, [], (err, rows) => {
     if (err) return res.status(500).json(err);
@@ -366,84 +668,9 @@ app.post('/instituicoes', autenticar, (req, res) => {
   });
 });
 
-app.delete('/instituicoes/:id', autenticar, (req, res) => {
-  db.run(`DELETE FROM instituicoes WHERE id = ?`, [req.params.id], function (err) {
-    if (err) return res.status(500).json(err);
-    res.json({ sucesso: true });
-  });
-});
-
-// CATEGORIAS
-app.get('/categorias', autenticar, (req, res) => {
-  db.all(`SELECT * FROM categorias`, [], (err, rows) => {
-    if (err) return res.status(500).json(err);
-    res.json(rows);
-  });
-});
-
-app.post('/categorias', autenticar, (req, res) => {
-  const { nome, sla_resposta, sla_solucao } = req.body;
-  db.run(
-    `INSERT INTO categorias (nome, sla_resposta, sla_solucao) VALUES (?, ?, ?)`,
-    [nome, sla_resposta, sla_solucao],
-    function (err) {
-      if (err) return res.status(500).json(err);
-      res.json({ id: this.lastID });
-    }
-  );
-});
-
-app.delete('/categorias/:id', autenticar, (req, res) => {
-  db.run(`DELETE FROM categorias WHERE id = ?`, [req.params.id], function (err) {
-    if (err) return res.status(500).json(err);
-    res.json({ sucesso: true });
-  });
-});
-
-// EDITAR USUÁRIO
-app.put('/usuarios/:id', autenticar, async (req, res) => {
-  const { nome, email, senha, perfil, setor } = req.body;
-  
-  if (senha) {
-    const senhaCriptografada = await bcrypt.hash(senha, 10);
-    db.run(
-      `UPDATE usuarios SET nome = ?, email = ?, senha = ?, perfil = ?, setor = ? WHERE id = ?`,
-      [nome, email, senhaCriptografada, perfil, setor, req.params.id],
-      function (err) {
-        if (err) return res.status(500).json(err);
-        res.json({ sucesso: true });
-      }
-    );
-  } else {
-    db.run(
-      `UPDATE usuarios SET nome = ?, email = ?, perfil = ?, setor = ? WHERE id = ?`,
-      [nome, email, perfil, setor, req.params.id],
-      function (err) {
-        if (err) return res.status(500).json(err);
-        res.json({ sucesso: true });
-      }
-    );
-  }
-});
-
-// EDITAR SETOR
-app.put('/setores/:id', autenticar, (req, res) => {
-  const { nome } = req.body;
-  db.run(
-    `UPDATE setores SET nome = ? WHERE id = ?`,
-    [nome, req.params.id],
-    function (err) {
-      if (err) return res.status(500).json(err);
-      res.json({ sucesso: true });
-    }
-  );
-});
-
-// EDITAR INSTITUIÇÃO
 app.put('/instituicoes/:id', autenticar, (req, res) => {
   const { nome, cidade } = req.body;
-  db.run(
-    `UPDATE instituicoes SET nome = ?, cidade = ? WHERE id = ?`,
+  db.run(`UPDATE instituicoes SET nome=?, cidade=? WHERE id=?`,
     [nome, cidade, req.params.id],
     function (err) {
       if (err) return res.status(500).json(err);
@@ -452,37 +679,50 @@ app.put('/instituicoes/:id', autenticar, (req, res) => {
   );
 });
 
-// EDITAR CATEGORIA
-app.put('/categorias/:id', autenticar, (req, res) => {
-  const { nome, sla_resposta, sla_solucao } = req.body;
+app.delete('/instituicoes/:id', autenticar, (req, res) => {
+  db.run(`DELETE FROM instituicoes WHERE id=?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json(err);
+    res.json({ sucesso: true });
+  });
+});
+
+app.get('/categorias', autenticar, (req, res) => {
+  db.all(`SELECT c.*, s.nome as setor_nome FROM categorias c
+          LEFT JOIN setores s ON c.setor_id = s.id`, [], (err, rows) => {
+    if (err) return res.status(500).json(err);
+    res.json(rows);
+  });
+});
+
+app.post('/categorias', autenticar, (req, res) => {
+  const { nome, sla_resposta, sla_solucao, setor_id } = req.body;
   db.run(
-    `UPDATE categorias SET nome = ?, sla_resposta = ?, sla_solucao = ? WHERE id = ?`,
-    [nome, sla_resposta, sla_solucao, req.params.id],
+    `INSERT INTO categorias (nome, sla_resposta, sla_solucao, setor_id) VALUES (?, ?, ?, ?)`,
+    [nome, sla_resposta, sla_solucao, setor_id || null],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ id: this.lastID });
+    }
+  );
+});
+
+app.put('/categorias/:id', autenticar, (req, res) => {
+  const { nome, sla_resposta, sla_solucao, setor_id } = req.body;
+  db.run(
+    `UPDATE categorias SET nome=?, sla_resposta=?, sla_solucao=?, setor_id=? WHERE id=?`,
+    [nome, sla_resposta, sla_solucao, setor_id || null, req.params.id],
     function (err) {
       if (err) return res.status(500).json(err);
       res.json({ sucesso: true });
     }
   );
 });
-// NOTIFICAÇÕES - chamados novos do setor do usuário
-app.get('/notificacoes/:usuario_id', autenticar, (req, res) => {
-  const { usuario_id } = req.params;
 
-  db.get(`SELECT setor FROM usuarios WHERE id = ?`, [usuario_id], (err, user) => {
+app.delete('/categorias/:id', autenticar, (req, res) => {
+  db.run(`DELETE FROM categorias WHERE id=?`, [req.params.id], function (err) {
     if (err) return res.status(500).json(err);
-    if (!user || !user.setor) return res.json([]);
-
-    db.all(
-      `SELECT id, protocolo, titulo, data_criacao 
-       FROM chamados 
-       WHERE setor_destino = ? AND status = 'Pendente'
-       ORDER BY id DESC LIMIT 10`,
-      [user.setor],
-      (err, rows) => {
-        if (err) return res.status(500).json(err);
-        res.json(rows);
-      }
-    );
+    res.json({ sucesso: true });
   });
 });
+
 app.listen(3000, () => console.log('Servidor rodando em http://localhost:3000'));

@@ -1,0 +1,120 @@
+<div class="solicitantes-container">
+
+  <div class="topo">
+    <h2>👤 Solicitantes</h2>
+    <button class="btn-novo" (click)="mostrarForm = !mostrarForm">
+      + Novo Solicitante
+    </button>
+  </div>
+
+  <!-- FORMULÁRIO NOVO -->
+  <div class="card form-novo" *ngIf="mostrarForm">
+    <h3>Cadastrar Solicitante</h3>
+    <div class="grid-3">
+      <div>
+        <label>Nome *</label>
+        <input [(ngModel)]="novo.nome" placeholder="Nome completo">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" [(ngModel)]="novo.email" placeholder="email@exemplo.com">
+      </div>
+      <div>
+        <label>Telefone</label>
+        <input [(ngModel)]="novo.telefone" placeholder="(91) 99999-9999">
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div>
+        <label>Instituição</label>
+        <input [(ngModel)]="novo.instituicao" placeholder="Ex: DETRAN">
+      </div>
+      <div>
+        <label>Unidade</label>
+        <input [(ngModel)]="novo.unidade" placeholder="Ex: SEDE">
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <label>Observações</label>
+      <textarea [(ngModel)]="novo.observacoes" rows="2"
+        placeholder="Observações sobre o solicitante"></textarea>
+    </div>
+    <div class="form-acoes">
+      <button class="btn-cancelar" (click)="mostrarForm = false">Cancelar</button>
+      <button class="btn-salvar" (click)="criar()">Cadastrar</button>
+    </div>
+  </div>
+
+  <!-- BUSCA -->
+  <div class="busca-box">
+    <input type="text" [(ngModel)]="busca"
+      placeholder="Pesquisar por nome ou email..."
+      (keyup.enter)="pesquisar()">
+    <button (click)="pesquisar()">Pesquisar</button>
+    <button class="btn-limpar" (click)="busca = ''; carregar()">Limpar</button>
+  </div>
+
+  <!-- LISTA -->
+  <div class="lista">
+    <div class="lista-header">
+      <span>Nome</span>
+      <span>Email</span>
+      <span>Telefone</span>
+      <span>Instituição</span>
+      <span>Unidade</span>
+      <span>Ações</span>
+    </div>
+
+    <div class="linha" *ngFor="let s of solicitantes">
+      <span>{{ s.nome }}</span>
+      <span>{{ s.email || '-' }}</span>
+      <span>{{ s.telefone || '-' }}</span>
+      <span>{{ s.instituicao || '-' }}</span>
+      <span>{{ s.unidade || '-' }}</span>
+      <span>
+        <button class="btn-edit" (click)="editar(s)">Editar</button>
+        <button class="btn-del" (click)="deletar(s.id)">Excluir</button>
+      </span>
+    </div>
+
+    <p *ngIf="solicitantes.length === 0">Nenhum solicitante cadastrado.</p>
+  </div>
+
+  <!-- MODAL EDIÇÃO -->
+  <div class="modal-backdrop" *ngIf="editando">
+    <div class="modal">
+      <h3>Editar Solicitante</h3>
+      <div class="grid-2">
+        <div>
+          <label>Nome</label>
+          <input [(ngModel)]="editando.nome">
+        </div>
+        <div>
+          <label>Email</label>
+          <input [(ngModel)]="editando.email">
+        </div>
+        <div>
+          <label>Telefone</label>
+          <input [(ngModel)]="editando.telefone">
+        </div>
+        <div>
+          <label>Instituição</label>
+          <input [(ngModel)]="editando.instituicao">
+        </div>
+        <div>
+          <label>Unidade</label>
+          <input [(ngModel)]="editando.unidade">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Observações</label>
+        <textarea [(ngModel)]="editando.observacoes" rows="2"></textarea>
+      </div>
+      <div class="modal-acoes">
+        <button class="btn-cancelar" (click)="editando = null">Cancelar</button>
+        <button class="btn-salvar" (click)="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

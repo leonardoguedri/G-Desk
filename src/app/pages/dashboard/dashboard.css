@@ -202,3 +202,63 @@ button:hover {
   color: #6b7280;
   margin-left: 8px;
 }
+.filtro-linha {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.filtro-campo {
+  min-width: 220px;
+}
+
+.filtro-valor {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filtro-datas {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.filtro-datas > div {
+  flex: 1;
+}
+
+.filtro-campo label,
+.filtro-valor label,
+.filtro-datas label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.filtro-campo select,
+.filtro-valor input,
+.filtro-datas input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.filtro-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-pesquisar {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}

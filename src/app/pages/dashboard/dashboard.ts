@@ -9,11 +9,20 @@ interface Chamado {
   protocolo: string;
   titulo: string;
   instituicao: string;
+  unidade: string;
   setor_destino: string;
+  setor_abertura: string;
   categoria: string;
   responsavel: string;
+  responsavel_nome: string;
   status: string;
   data_criacao: string;
+  data_conclusao: string;
+  canal: string;
+  solicitante_nome: string;
+  criador_nome: string;
+  sla_resposta: string;
+  sla_solucao: string;
   usuario_id: number;
 }
 
@@ -27,26 +36,46 @@ interface Chamado {
 export class DashboardComponent implements OnInit {
 
   visualizacao: 'lista' | 'bloco' = 'lista';
-  filtro: 'geral' | 'pendente' | 'execucao' | 'concluido' = 'geral';
+  filtroAba: 'geral' | 'pendente' | 'execucao' | 'concluido' = 'geral';
   usuarioLogado: any = JSON.parse(localStorage.getItem('usuario') || '{}');
 
   chamados: Chamado[] = [];
   instituicoes: any[] = [];
   carregando = true;
 
-  // PAGINAÇÃO
   paginaAtual = 1;
   itensPorPagina = 10;
 
-  filtroAvancado = {
-    protocolo: '',
-    instituicao: '',
-    categoria: '',
-    dataInicio: '',
-    dataFim: ''
-  };
-
   filtrosAbertos = false;
+
+  campoFiltro = '';
+  valorFiltro = '';
+  dataInicio = '';
+  dataFim = '';
+
+  opcoesFiltro = [
+    { campo: 'protocolo', label: 'Número de Protocolo' },
+    { campo: 'setor_destino', label: 'Setor Responsável' },
+    { campo: 'canal', label: 'Canal' },
+    { campo: 'categoria', label: 'Categoria' },
+    { campo: 'solicitante_nome', label: 'Solicitante' },
+    { campo: 'data', label: 'Data (intervalo)' },
+    { campo: 'criador_nome', label: 'Criado por' },
+    { campo: 'data_conclusao', label: 'Data de Conclusão' },
+    { campo: 'setor_abertura', label: 'Setor de Abertura' },
+    { campo: 'status', label: 'Status do Chamado' },
+    { campo: 'sla_solucao', label: 'Tempo de SLA (Conclusão)' },
+    { campo: 'sla_resposta', label: 'Tempo de SLA (Resposta)' },
+    { campo: 'titulo', label: 'Título' },
+    { campo: 'instituicao', label: 'Instituição' },
+    { campo: 'unidade', label: 'Unidade' },
+    { campo: 'responsavel_nome', label: 'Usuário Responsável' },
+    { campo: 'usuario', label: 'Usuários (vinculados)' }
+  ];
+
+  get isFiltroData() {
+    return this.campoFiltro === 'data' || this.campoFiltro === 'data_conclusao';
+  }
 
   constructor(
     private router: Router,
@@ -55,86 +84,64 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    await Promise.all([
-      this.carregarChamados(),
-      this.carregarInstituicoes()
-    ]);
+    await this.carregarChamados();
   }
 
   async carregarChamados() {
     this.carregando = true;
     try {
-      const data = await this.api.get('/chamados');
+      let url = '/chamados?';
+      const params: string[] = [];
+
+      if (this.campoFiltro && this.campoFiltro !== 'data' && this.campoFiltro !== 'usuario') {
+        if (this.valorFiltro) {
+          params.push(`campo=${this.campoFiltro}&valor=${encodeURIComponent(this.valorFiltro)}`);
+        }
+      }
+
+      if (this.campoFiltro === 'usuario') {
+        if (this.valorFiltro) {
+          params.push(`campo=criador_nome&valor=${encodeURIComponent(this.valorFiltro)}`);
+        }
+      }
+
+      if (this.dataInicio) params.push(`data_inicio=${this.dataInicio}`);
+      if (this.dataFim) params.push(`data_fim=${this.dataFim}`);
+
+      url += params.join('&');
+      const data = await this.api.get(url);
       this.chamados = [...data];
     } catch (e) {
-      console.error('Erro ao carregar chamados:', e);
+      console.error('Erro:', e);
     } finally {
       this.carregando = false;
       this.cdr.detectChanges();
     }
   }
 
-  async carregarInstituicoes() {
-    try {
-      this.instituicoes = await this.api.get('/instituicoes');
-    } catch (e) {
-      console.error('Erro:', e);
-    }
+  async pesquisar() {
+    this.paginaAtual = 1;
+    await this.carregarChamados();
   }
 
-  limparFiltros() {
-    this.filtroAvancado = {
-      protocolo: '',
-      instituicao: '',
-      categoria: '',
-      dataInicio: '',
-      dataFim: ''
-    };
+  async limparFiltros() {
+    this.campoFiltro = '';
+    this.valorFiltro = '';
+    this.dataInicio = '';
+    this.dataFim = '';
     this.paginaAtual = 1;
-    this.cdr.detectChanges();
+    await this.carregarChamados();
   }
 
   get chamadosFiltrados() {
     return this.chamados.filter(c => {
-
-      if (this.filtro === 'pendente' && c.status !== 'Pendente') return false;
-      if (this.filtro === 'execucao' && c.status !== 'Em Execução') return false;
-      if (this.filtro === 'concluido' && c.status !== 'Concluído') return false;
-
-      if (this.filtroAvancado.protocolo &&
-        !c.protocolo.toLowerCase().includes(this.filtroAvancado.protocolo.toLowerCase())) {
-        return false;
-      }
-
-      if (this.filtroAvancado.instituicao &&
-        c.instituicao !== this.filtroAvancado.instituicao) {
-        return false;
-      }
-
-      if (this.filtroAvancado.categoria &&
-        !c.categoria?.toLowerCase().includes(this.filtroAvancado.categoria.toLowerCase())) {
-        return false;
-      }
-
-      if (this.filtroAvancado.dataInicio) {
-        const dataInicio = new Date(this.filtroAvancado.dataInicio);
-        const partes = c.data_criacao.split('/');
-        const dataChamado = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
-        if (dataChamado < dataInicio) return false;
-      }
-
-      if (this.filtroAvancado.dataFim) {
-        const dataFim = new Date(this.filtroAvancado.dataFim);
-        const partes = c.data_criacao.split('/');
-        const dataChamado = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
-        if (dataChamado > dataFim) return false;
-      }
-
+      if (this.filtroAba === 'pendente') return c.status === 'Pendente';
+      if (this.filtroAba === 'execucao') return c.status === 'Em Execução';
+      if (this.filtroAba === 'concluido') return c.status === 'Concluído';
       return true;
     });
   }
 
-  // PAGINAÇÃO
   get totalPaginas() {
     return Math.ceil(this.chamadosFiltrados.length / this.itensPorPagina);
   }
@@ -148,7 +155,6 @@ export class DashboardComponent implements OnInit {
     const total = this.totalPaginas;
     const atual = this.paginaAtual;
     const paginas: number[] = [];
-
     if (total <= 7) {
       for (let i = 1; i <= total; i++) paginas.push(i);
     } else {
@@ -160,7 +166,6 @@ export class DashboardComponent implements OnInit {
       if (atual < total - 2) paginas.push(-1);
       paginas.push(total);
     }
-
     return paginas;
   }
 
@@ -170,8 +175,8 @@ export class DashboardComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  setFiltro(f: any) {
-    this.filtro = f;
+  setFiltroAba(f: any) {
+    this.filtroAba = f;
     this.paginaAtual = 1;
     this.cdr.detectChanges();
   }
@@ -196,7 +201,7 @@ export class DashboardComponent implements OnInit {
     const headers = ['Protocolo', 'Status', 'Instituição', 'Setor', 'Categoria', 'Responsável', 'Data'];
     const rows = this.chamadosFiltrados.map(c => [
       c.protocolo, c.status, c.instituicao,
-      c.setor_destino, c.categoria, c.responsavel || '-', c.data_criacao
+      c.setor_destino, c.categoria, c.responsavel_nome || '-', c.data_criacao
     ]);
     const csv = [headers, ...rows].map(r => r.join(';')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });

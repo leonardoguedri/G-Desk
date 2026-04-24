@@ -19,6 +19,7 @@ export class CriarChamadoComponent implements OnInit {
   setores: any[] = [];
   instituicoes: any[] = [];
   categorias: any[] = [];
+  categoriasFiltradas: any[] = [];
 
   form = {
     titulo: '',
@@ -47,14 +48,15 @@ export class CriarChamadoComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  async ngOnInit() {
-    await Promise.all([
-      this.carregarSetores(),
-      this.carregarInstituicoes(),
-      this.carregarCategorias()
-    ]);
-    this.cdr.detectChanges();
-  }
+ async ngOnInit() {
+  await Promise.all([
+    this.carregarSetores(),
+    this.carregarInstituicoes(),
+    this.carregarCategorias()
+  ]);
+  this.categoriasFiltradas = this.categorias;
+  this.cdr.detectChanges();
+}
 
   async carregarSetores() {
     this.setores = await this.api.get('/setores');
@@ -68,12 +70,36 @@ export class CriarChamadoComponent implements OnInit {
     this.categorias = await this.api.get('/categorias');
   }
 
-  onCategoriaChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const cat = this.categorias.find(c => c.nome === select.value);
-    this.form.categoria = select.value;
-    this.sla = cat ? { resposta: cat.sla_resposta, solucao: cat.sla_solucao } : { resposta: '', solucao: '' };
+ onCategoriaChange(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  const cat = this.categorias.find((c: any) => c.nome === select.value);
+  this.form.categoria = select.value;
+
+  if (cat) {
+    this.sla = { resposta: cat.sla_resposta, solucao: cat.sla_solucao };
+    // Preenche setor automaticamente se categoria tiver setor vinculado
+    if (cat.setor_nome) {
+      this.form.setor_destino = cat.setor_nome;
+    }
+  } else {
+    this.sla = { resposta: '', solucao: '' };
   }
+}
+
+onSetorChange(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  this.form.setor_destino = select.value;
+  // Filtra categorias do setor selecionado
+  const setor = this.setores.find((s: any) => s.nome === select.value);
+  if (setor) {
+    this.categoriasFiltradas = this.categorias.filter(
+      (c: any) => c.setor_id === setor.id || !c.setor_id
+    );
+  } else {
+    this.categoriasFiltradas = this.categorias;
+  }
+  this.cdr.detectChanges();
+}
 
   enviarObservacao() {
     if (!this.novaObservacao.trim()) return;
@@ -113,4 +139,32 @@ export class CriarChamadoComponent implements OnInit {
       this.cdr.detectChanges();
     }
   }
+
+  solicitantesBusca: any[] = [];
+mostrarSugestoes = false;
+
+async buscarSolicitante(event: any) {
+  const termo = event.target.value;
+  if (termo.length < 2) {
+    this.solicitantesBusca = [];
+    return;
+  }
+  this.solicitantesBusca = await this.api.get(
+    `/solicitantes?busca=${encodeURIComponent(termo)}`
+  );
+  this.mostrarSugestoes = true;
+  this.cdr.detectChanges();
+}
+
+selecionarSolicitante(s: any) {
+  this.form.solicitante_nome = s.nome;
+  this.form.solicitante_email = s.email;
+  this.form.solicitante_telefone = s.telefone;
+  this.form.instituicao = s.instituicao;
+  this.form.unidade = s.unidade;
+  this.mostrarSugestoes = false;
+  this.solicitantesBusca = [];
+  this.cdr.detectChanges();
+}
+
 }

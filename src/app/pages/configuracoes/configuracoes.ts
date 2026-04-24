@@ -24,7 +24,7 @@ export class ConfiguracoesComponent implements OnInit {
   novoUsuario = { nome: '', email: '', senha: '', perfil: 'user', setor: '' };
   novoSetor = { nome: '' };
   novaInstituicao = { nome: '', cidade: '' };
-  novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '' };
+  novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '', setor_id: '' };
 
   editandoUsuario: any = null;
   editandoSetor: any = null;
@@ -154,16 +154,16 @@ export class ConfiguracoesComponent implements OnInit {
 
   // CATEGORIAS
   async criarCategoria() {
-    if (!this.novaCategoria.nome) return;
-    await this.api.post('/categorias', this.novaCategoria);
-    this.novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '' };
-    await this.carregarCategorias();
-    this.cdr.detectChanges();
-  }
+  if (!this.novaCategoria.nome) return;
+  await this.api.post('/categorias', this.novaCategoria);
+  this.novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '', setor_id: '' };
+  await this.carregarCategorias();
+  this.cdr.detectChanges();
+}
 
-  editarCategoria(c: any) {
-    this.editandoCategoria = { ...c };
-  }
+editarCategoria(c: any) {
+  this.editandoCategoria = { ...c, setor_id: c.setor_id || '' };
+}
 
   async salvarCategoria() {
     if (!this.editandoCategoria) return;

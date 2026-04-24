@@ -5,18 +5,14 @@
     <h2>Detalhes do Chamado</h2>
 
     <div class="acoes-chamado">
-      <button
-        class="btn-assumir"
-        *ngIf="podeAssumir"
-        (click)="assumirChamado()">
+      <button class="btn-assumir" *ngIf="podeAssumir" (click)="assumirChamado()">
         ✋ Assumir Chamado
       </button>
-
-      <button
-        class="btn-concluir"
-        *ngIf="podeConcluir"
-        (click)="concluirChamado()">
+      <button class="btn-concluir" *ngIf="podeConcluir" (click)="abrirModalConclusao()">
         ✅ Concluir Chamado
+      </button>
+      <button class="btn-rejeitar" *ngIf="podeRejeitar" (click)="abrirModalRejeicao()">
+        ❌ Rejeitar Chamado
       </button>
     </div>
   </div>
@@ -39,6 +35,10 @@
             <p class="badge {{ chamado.status | lowercase }}">{{ chamado.status }}</p>
           </div>
         </div>
+        <div class="grid-2" style="margin-top:15px">
+          <div><label>Criado por</label><p>{{ chamado.criador_nome || '-' }}</p></div>
+          <div><label>Setor de Abertura</label><p>{{ chamado.setor_abertura || '-' }}</p></div>
+        </div>
       </div>
 
       <div class="card">
@@ -54,12 +54,48 @@
         </div>
       </div>
 
+      <!-- IDENTIFICAÇÃO DA SOLICITAÇÃO -->
       <div class="card">
-        <h3>Identificação da Solicitação</h3>
-        <div class="grid-3">
+        <div class="card-header-row">
+          <h3>Identificação da Solicitação</h3>
+          <button class="btn-editar-pequeno"
+            *ngIf="podeRedirecionar && !editandoRedirecionamento"
+            (click)="iniciarEdicaoRedirecionamento()">
+            ✏️ Redirecionar
+          </button>
+        </div>
+
+        <div *ngIf="!editandoRedirecionamento" class="grid-3">
           <div><label>Categoria</label><p>{{ chamado.categoria || '-' }}</p></div>
           <div><label>Prioridade</label><p>{{ chamado.prioridade || '-' }}</p></div>
           <div><label>Setor Destino</label><p>{{ chamado.setor_destino || '-' }}</p></div>
+        </div>
+
+        <div *ngIf="editandoRedirecionamento" class="edicao-redirecionamento">
+          <div class="grid-2">
+            <div>
+              <label>Novo Setor Destino</label>
+              <select class="select-custom" [(ngModel)]="novoSetorDestino" (change)="onSetorChange()">
+  <option value="">Selecione</option>
+  <option *ngFor="let s of setores" [value]="s.nome">{{ s.nome }}</option>
+</select>
+            </div>
+            <div>
+              <label>Categoria</label>
+              <select class="select-custom" [(ngModel)]="novaCategoria">
+  <option value="">Selecione</option>
+  <option *ngFor="let c of categoriasPorSetor" [value]="c.nome">{{ c.nome }}</option>
+</select>
+            </div>
+          </div>
+          <div class="edicao-acoes">
+            <button class="btn-cancelar-edicao" (click)="editandoRedirecionamento = false">
+              Cancelar
+            </button>
+            <button class="btn-salvar-edicao" (click)="salvarRedirecionamento()">
+              Salvar Redirecionamento
+            </button>
+          </div>
         </div>
       </div>
 
@@ -72,7 +108,16 @@
         <h3>Outras Informações</h3>
         <div class="grid-2">
           <div><label>Canal</label><p>{{ chamado.canal || '-' }}</p></div>
-          <div><label>Responsável</label><p>{{ chamado.responsavel_id ? 'Atribuído' : 'Não atribuído' }}</p></div>
+          <div>
+            <label>Responsável</label>
+            <p *ngIf="!chamado.responsavel_nome">Não atribuído</p>
+            <p *ngIf="chamado.responsavel_nome">
+              {{ chamado.responsavel_nome }}
+              <span class="responsavel-email" *ngIf="chamado.responsavel_email">
+                — {{ chamado.responsavel_email }}
+              </span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -82,14 +127,27 @@
     <div class="coluna-lateral">
 
       <div class="card">
-        <h3>📋 Movimentações</h3>
+        <h3>📋 Histórico</h3>
         <div class="timeline">
           <div class="timeline-item" *ngFor="let m of movimentacoes">
-            <div class="timeline-dot"></div>
+            <div class="timeline-dot" [ngClass]="getTipoClass(m.tipo)"></div>
             <div class="timeline-conteudo">
-              <strong>{{ m.usuario_nome }}</strong>
-              <span class="tipo">{{ m.tipo }}</span>
-              <p>{{ m.descricao }}</p>
+              <div class="timeline-header">
+                <strong>{{ m.usuario_nome }}</strong>
+                <span class="tipo" [ngClass]="getTipoClass(m.tipo)">{{ m.tipo }}</span>
+              </div>
+              <p *ngIf="m.tipo === 'conclusao'" class="texto-conclusao">
+                ✅ <strong>Conclusão:</strong> {{ m.descricao }}
+              </p>
+              <p *ngIf="m.tipo === 'rejeicao'" class="texto-rejeicao">
+                ❌ <strong>Motivo:</strong> {{ m.descricao }}
+              </p>
+              <p *ngIf="m.tipo === 'redirecionamento'" class="texto-redirecionamento">
+                🔀 {{ m.descricao }}
+              </p>
+              <p *ngIf="m.tipo !== 'conclusao' && m.tipo !== 'rejeicao' && m.tipo !== 'redirecionamento'">
+                {{ m.descricao }}
+              </p>
               <small>{{ m.data }}</small>
             </div>
           </div>
@@ -110,8 +168,7 @@
           <p *ngIf="comentarios.length === 0">Nenhum comentário ainda.</p>
         </div>
         <div class="novo-comentario">
-          <textarea
-            [(ngModel)]="novoComentario"
+          <textarea [(ngModel)]="novoComentario"
             placeholder="Digite um comentário interno..."
             rows="3">
           </textarea>
@@ -140,6 +197,52 @@
 
     </div>
 
+  </div>
+
+  <!-- MODAL CONCLUSÃO -->
+  <div class="modal-backdrop" *ngIf="mostrarModalConclusao">
+    <div class="modal modal-conclusao">
+      <h3>✅ Concluir Chamado</h3>
+      <p class="modal-desc">
+        Descreva o que foi feito para resolver este chamado.
+        Este texto ficará registrado no histórico.
+      </p>
+      <textarea [(ngModel)]="textoConclusao"
+        placeholder="Descreva a solução aplicada..."
+        rows="5">
+      </textarea>
+      <div class="modal-acoes">
+        <button class="btn-cancelar" (click)="mostrarModalConclusao = false">Cancelar</button>
+        <button class="btn-confirmar-conclusao"
+          (click)="confirmarConclusao()"
+          [disabled]="!textoConclusao.trim()">
+          Confirmar Conclusão
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL REJEIÇÃO -->
+  <div class="modal-backdrop" *ngIf="mostrarModalRejeicao">
+    <div class="modal modal-rejeicao">
+      <h3>❌ Rejeitar Chamado</h3>
+      <p class="modal-desc">
+        Explique o motivo da rejeição. O chamado voltará
+        para o setor de origem como pendente.
+      </p>
+      <textarea [(ngModel)]="motivoRejeicao"
+        placeholder="Descreva o motivo da rejeição..."
+        rows="5">
+      </textarea>
+      <div class="modal-acoes">
+        <button class="btn-cancelar" (click)="mostrarModalRejeicao = false">Cancelar</button>
+        <button class="btn-confirmar-rejeicao"
+          (click)="confirmarRejeicao()"
+          [disabled]="!motivoRejeicao.trim()">
+          Confirmar Rejeição
+        </button>
+      </div>
+    </div>
   </div>
 
 </div>

@@ -9,6 +9,7 @@ import { CriarChamadoComponent } from './chamado/criar-chamado/criar-chamado';
 import { authGuard } from './auth/auth.guard';
 import { ChamadoDetalheComponent } from './pages/chamado-detalhe/chamado-detalhe';
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes';
+import { SolicitantesComponent } from './pages/solicitantes/solicitantes';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -25,6 +26,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'chamado/:id', component: ChamadoDetalheComponent },
       { path: 'configuracoes', component: ConfiguracoesComponent },
+      { path: 'solicitantes', component: SolicitantesComponent },
     ],
   },
 ];

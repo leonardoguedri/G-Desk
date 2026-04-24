@@ -206,7 +206,7 @@
 /* Nome */
 .sidebar-footer h6:first-child {
   font-weight: 600;
-  font-size: 13px;
+  font-size: 10px;
   color: #ffffff;
   margin-bottom: 0px; /* espaço pequeno entre nome e email */
 }
@@ -294,3 +294,54 @@
   color: #9ca3af;
   font-size: 11px;
 }
+/* nova notificação */
+
+.notif-secao {
+  margin-bottom: 12px;
+}
+
+.notif-secao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.notif-secao-header h4 {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.btn-todas-lidas {
+  font-size: 11px;
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  padding: 0;
+}
+
+.notif-vazio {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.notif-tipo {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.notif-tipo.status { background: #bfdbfe; color: #1e3a8a; }
+.notif-tipo.concluido { background: #bbf7d0; color: #065f46; }
+.notif-tipo.comentario { background: #fef9c3; color: #854d0e; }
+.notif-tipo.anexo { background: #f3e8ff; color: #6b21a8; }
+.notif-tipo.abertura { background: #fee2e2; color: #991b1b; }

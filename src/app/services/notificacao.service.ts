@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -7,9 +8,10 @@ import { ApiService } from './api.service';
 export class NotificacaoService {
 
   notificacoes: any[] = [];
+  notificacoesSetor: any[] = [];
   private intervalo: any;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private router: Router) {}
 
   iniciar(usuario_id: number) {
     this.verificar(usuario_id);
@@ -19,21 +21,45 @@ export class NotificacaoService {
   }
 
   parar() {
-    if (this.intervalo) {
-      clearInterval(this.intervalo);
-    }
+    if (this.intervalo) clearInterval(this.intervalo);
   }
 
   private async verificar(usuario_id: number) {
     try {
-      const data = await this.api.get(`/notificacoes/${usuario_id}`);
-      this.notificacoes = data;
+      const [pessoais, setor] = await Promise.all([
+        this.api.get(`/notificacoes/${usuario_id}`),
+        this.api.get(`/notificacoes-setor/${usuario_id}`)
+      ]);
+      this.notificacoes = pessoais;
+      this.notificacoesSetor = setor;
     } catch (e) {
-      console.error('Erro ao verificar notificações:', e);
+      console.error('Erro nas notificações:', e);
     }
   }
 
-  get total() {
+  async marcarComoLida(id: number, usuario_id: number) {
+    await this.api.put(`/notificacoes/${id}/lida`, {});
+    await this.verificar(usuario_id);
+  }
+
+  async marcarTodasLidas(usuario_id: number) {
+    await this.api.put(`/notificacoes/usuario/${usuario_id}/todas-lidas`, {});
+    await this.verificar(usuario_id);
+  }
+
+  abrirChamado(chamado_id: number) {
+    this.router.navigate(['/chamado', chamado_id]);
+  }
+
+  get totalPessoais() {
     return this.notificacoes.length;
+  }
+
+  get totalSetor() {
+    return this.notificacoesSetor.length;
+  }
+
+  get total() {
+    return this.totalPessoais + this.totalSetor;
   }
 }
