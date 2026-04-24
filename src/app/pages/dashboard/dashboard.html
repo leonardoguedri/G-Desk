@@ -1,7 +1,7 @@
 <div class="dashboard-container">
 
   <div class="top-bar">
-    <div class="filtros">
+    <div class="filtros-aba">
       <button (click)="setFiltroAba('geral')" [class.active]="filtroAba === 'geral'">Geral</button>
       <button (click)="setFiltroAba('pendente')" [class.active]="filtroAba === 'pendente'">Pendentes</button>
       <button (click)="setFiltroAba('execucao')" [class.active]="filtroAba === 'execucao'">Em execução</button>
@@ -10,7 +10,8 @@
 
     <div class="acoes">
       <button class="btn-filtro" (click)="filtrosAbertos = !filtrosAbertos">
-        🔍 Filtros {{ filtrosAbertos ? '▲' : '▼' }}
+        🔍 Filtros
+        <span class="badge-filtro" *ngIf="filtrosAtivos.length > 0">{{ filtrosAtivos.length }}</span>
       </button>
       <button class="btn-criar" routerLink="/criar-chamado">+ Criar Chamado</button>
       <button class="btn-exportar" (click)="exportarCSV()">⬇ Baixar</button>
@@ -19,43 +20,57 @@
     </div>
   </div>
 
-  <!-- FILTROS AVANÇADOS -->
-  <div class="filtros-avancados" *ngIf="filtrosAbertos">
-    <div class="filtro-linha">
+  <!-- PAINEL DE FILTROS -->
+  <div class="filtros-painel" *ngIf="filtrosAbertos">
 
-      <div class="filtro-campo">
+    <!-- FILTROS ATIVOS -->
+    <div class="filtros-ativos" *ngIf="filtrosAtivos.length > 0">
+      <span class="filtro-tag" *ngFor="let f of filtrosAtivos; let i = index">
+        <span class="filtro-tag-label">{{ f.label }}</span>
+        <span class="filtro-tag-valor" *ngIf="f.valor">: {{ f.valor }}</span>
+        <span class="filtro-tag-valor" *ngIf="f.dataInicio || f.dataFim">
+          : {{ f.dataInicio || '...' }} → {{ f.dataFim || '...' }}
+        </span>
+        <button class="filtro-tag-remover" (click)="removerFiltro(i)">×</button>
+      </span>
+      <button class="btn-limpar-todos" (click)="limparFiltros()">Limpar todos</button>
+    </div>
+
+    <!-- ADICIONAR FILTRO -->
+    <div class="adicionar-filtro">
+      <div class="filtro-select">
         <label>Tipo de Filtro</label>
-        <select [(ngModel)]="campoFiltro">
-          <option value="">Selecione o filtro</option>
-          <option *ngFor="let op of opcoesFiltro" [value]="op.campo">
+        <select [(ngModel)]="campoFiltroSelecionado">
+          <option value="">Selecione...</option>
+          <option *ngFor="let op of opcoesDisponiveis" [value]="op.campo">
             {{ op.label }}
           </option>
         </select>
       </div>
 
-      <div class="filtro-valor" *ngIf="campoFiltro && !isFiltroData">
-        <label>Pesquisar</label>
-        <input type="text" [(ngModel)]="valorFiltro"
+      <div class="filtro-input" *ngIf="campoFiltroSelecionado && !isFiltroData">
+        <label>Valor</label>
+        <input type="text" [(ngModel)]="valorFiltroTemp"
           placeholder="Digite para pesquisar..."
-          (keyup.enter)="pesquisar()">
+          (keyup.enter)="adicionarFiltro()">
       </div>
 
-      <div class="filtro-datas" *ngIf="isFiltroData">
+      <div class="filtro-datas" *ngIf="campoFiltroSelecionado && isFiltroData">
         <div>
           <label>Data Início</label>
-          <input type="date" [(ngModel)]="dataInicio">
+          <input type="date" [(ngModel)]="dataInicioTemp">
         </div>
         <div>
           <label>Data Fim</label>
-          <input type="date" [(ngModel)]="dataFim">
+          <input type="date" [(ngModel)]="dataFimTemp">
         </div>
       </div>
 
-      <div class="filtro-acoes">
-        <button class="btn-pesquisar" (click)="pesquisar()">Pesquisar</button>
-        <button class="btn-limpar" (click)="limparFiltros()">Limpar</button>
-      </div>
-
+      <button class="btn-add-filtro"
+        *ngIf="campoFiltroSelecionado"
+        (click)="adicionarFiltro()">
+        + Adicionar
+      </button>
     </div>
 
     <p class="resultado-filtro">
@@ -66,7 +81,7 @@
   <p *ngIf="carregando">Carregando chamados...</p>
 
   <div *ngIf="!carregando && chamadosFiltrados.length === 0">
-    <p>Nenhum chamado encontrado.</p>
+    <p class="vazio">Nenhum chamado encontrado.</p>
   </div>
 
   <!-- LISTA -->
@@ -80,7 +95,6 @@
       <span>Responsável</span>
       <span>Data</span>
     </div>
-
     <div class="linha" *ngFor="let c of chamadosPaginados"
       (click)="abrirDetalhe(c.id)" style="cursor:pointer;">
       <span>{{ c.protocolo }}</span>
@@ -109,19 +123,13 @@
   <!-- PAGINAÇÃO -->
   <div class="paginacao" *ngIf="!carregando && totalPaginas > 1">
     <button class="pag-btn" (click)="irParaPagina(paginaAtual - 1)" [disabled]="paginaAtual === 1">◀</button>
-
     <ng-container *ngFor="let p of paginas">
       <span *ngIf="p === -1" class="pag-reticencias">...</span>
       <button *ngIf="p !== -1" class="pag-btn" [class.ativa]="p === paginaAtual"
         (click)="irParaPagina(p)">{{ p }}</button>
     </ng-container>
-
     <button class="pag-btn" (click)="irParaPagina(paginaAtual + 1)" [disabled]="paginaAtual === totalPaginas">▶</button>
-
-    <span class="pag-info">
-      Página {{ paginaAtual }} de {{ totalPaginas }}
-      ({{ chamadosFiltrados.length }} chamados)
-    </span>
+    <span class="pag-info">Página {{ paginaAtual }} de {{ totalPaginas }} ({{ chamadosFiltrados.length }} chamados)</span>
   </div>
 
 </div>

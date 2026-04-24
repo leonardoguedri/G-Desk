@@ -305,9 +305,9 @@ app.get('/chamados/:id', autenticar, (req, res) => {
 });
 
 app.get('/chamados', autenticar, (req, res) => {
-  const { campo, valor, data_inicio, data_fim } = req.query;
+  const { campo, valor, data_inicio, data_fim, conclusao_inicio, conclusao_fim } = req.query;
 
-let query = `SELECT * FROM chamados WHERE 1=1`;
+ let query = `SELECT * FROM chamados WHERE 1=1`;
 const params = [];
 
 if (campo && valor && typeof campo === 'string') {
@@ -332,23 +332,43 @@ if (campo && valor && typeof campo === 'string') {
   }
 }
 
-  if (data_inicio) {
-    query += ` AND data_criacao >= ?`;
+  if (data_inicio && data_fim) {
+    // Converte dd/mm/yyyy para comparação correta
+    query += ` AND (
+      substr(data_criacao, 7, 4) || '-' ||
+      substr(data_criacao, 4, 2) || '-' ||
+      substr(data_criacao, 1, 2)
+    ) BETWEEN ? AND ?`;
+    params.push(data_inicio, data_fim);
+  } else if (data_inicio) {
+    query += ` AND (
+      substr(data_criacao, 7, 4) || '-' ||
+      substr(data_criacao, 4, 2) || '-' ||
+      substr(data_criacao, 1, 2)
+    ) >= ?`;
     params.push(data_inicio);
+  } else if (data_fim) {
+    query += ` AND (
+      substr(data_criacao, 7, 4) || '-' ||
+      substr(data_criacao, 4, 2) || '-' ||
+      substr(data_criacao, 1, 2)
+    ) <= ?`;
+    params.push(data_fim);
   }
 
-  if (data_fim) {
-    query += ` AND data_criacao <= ?`;
-    params.push(data_fim);
+  if (conclusao_inicio && conclusao_fim) {
+    query += ` AND data_conclusao BETWEEN ? AND ?`;
+    params.push(conclusao_inicio, conclusao_fim);
   }
 
   query += ` ORDER BY id DESC`;
 
-  db.all(query, params, (err, rows) => {
-    if (err) return res.status(500).json(err);
-    res.json(rows);
-  });
+ db.all(query, params, (err, rows) => {
+  if (err) return res.status(500).json(err);
+  res.json(rows);
 });
+});
+
 
 app.get('/chamados/setor/:setor', autenticar, (req, res) => {
   db.all(

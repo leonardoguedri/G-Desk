@@ -12,6 +12,9 @@ import { ApiService } from '../../services/api.service';
 })
 export class SolicitantesComponent implements OnInit {
 
+  usuarioLogado: any = JSON.parse(localStorage.getItem('usuario') || '{}');
+  isAdmin = this.usuarioLogado.perfil === 'admin';
+
   solicitantes: any[] = [];
   busca = '';
   editando: any = null;
@@ -35,7 +38,9 @@ export class SolicitantesComponent implements OnInit {
 
   async pesquisar() {
     if (this.busca.trim()) {
-      this.solicitantes = await this.api.get(`/solicitantes?busca=${encodeURIComponent(this.busca)}`);
+      this.solicitantes = await this.api.get(
+        `/solicitantes?busca=${encodeURIComponent(this.busca)}`
+      );
     } else {
       await this.carregar();
     }
@@ -51,17 +56,19 @@ export class SolicitantesComponent implements OnInit {
   }
 
   editar(s: any) {
+    if (!this.isAdmin) return;
     this.editando = { ...s };
   }
 
   async salvar() {
-    if (!this.editando) return;
+    if (!this.editando || !this.isAdmin) return;
     await this.api.put(`/solicitantes/${this.editando.id}`, this.editando);
     this.editando = null;
     await this.carregar();
   }
 
   async deletar(id: number) {
+    if (!this.isAdmin) return;
     await this.api.delete(`/solicitantes/${id}`);
     await this.carregar();
   }

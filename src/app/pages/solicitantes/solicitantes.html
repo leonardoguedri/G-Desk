@@ -2,13 +2,12 @@
 
   <div class="topo">
     <h2>👤 Solicitantes</h2>
-    <button class="btn-novo" (click)="mostrarForm = !mostrarForm">
+    <button class="btn-novo" (click)="mostrarForm = !mostrarForm" *ngIf="isAdmin">
       + Novo Solicitante
     </button>
   </div>
 
-  <!-- FORMULÁRIO NOVO -->
-  <div class="card form-novo" *ngIf="mostrarForm">
+  <div class="card form-novo" *ngIf="mostrarForm && isAdmin">
     <h3>Cadastrar Solicitante</h3>
     <div class="grid-3">
       <div>
@@ -45,16 +44,14 @@
     </div>
   </div>
 
-  <!-- BUSCA -->
   <div class="busca-box">
     <input type="text" [(ngModel)]="busca"
       placeholder="Pesquisar por nome ou email..."
       (keyup.enter)="pesquisar()">
-    <button (click)="pesquisar()">Pesquisar</button>
+    <button class="btn-pesquisar" (click)="pesquisar()">Pesquisar</button>
     <button class="btn-limpar" (click)="busca = ''; carregar()">Limpar</button>
   </div>
 
-  <!-- LISTA -->
   <div class="lista">
     <div class="lista-header">
       <span>Nome</span>
@@ -62,7 +59,7 @@
       <span>Telefone</span>
       <span>Instituição</span>
       <span>Unidade</span>
-      <span>Ações</span>
+      <span *ngIf="isAdmin">Ações</span>
     </div>
 
     <div class="linha" *ngFor="let s of solicitantes">
@@ -71,40 +68,24 @@
       <span>{{ s.telefone || '-' }}</span>
       <span>{{ s.instituicao || '-' }}</span>
       <span>{{ s.unidade || '-' }}</span>
-      <span>
+      <span *ngIf="isAdmin">
         <button class="btn-edit" (click)="editar(s)">Editar</button>
         <button class="btn-del" (click)="deletar(s.id)">Excluir</button>
       </span>
     </div>
 
-    <p *ngIf="solicitantes.length === 0">Nenhum solicitante cadastrado.</p>
+    <p class="vazio" *ngIf="solicitantes.length === 0">Nenhum solicitante cadastrado.</p>
   </div>
 
-  <!-- MODAL EDIÇÃO -->
   <div class="modal-backdrop" *ngIf="editando">
     <div class="modal">
       <h3>Editar Solicitante</h3>
       <div class="grid-2">
-        <div>
-          <label>Nome</label>
-          <input [(ngModel)]="editando.nome">
-        </div>
-        <div>
-          <label>Email</label>
-          <input [(ngModel)]="editando.email">
-        </div>
-        <div>
-          <label>Telefone</label>
-          <input [(ngModel)]="editando.telefone">
-        </div>
-        <div>
-          <label>Instituição</label>
-          <input [(ngModel)]="editando.instituicao">
-        </div>
-        <div>
-          <label>Unidade</label>
-          <input [(ngModel)]="editando.unidade">
-        </div>
+        <div><label>Nome</label><input [(ngModel)]="editando.nome"></div>
+        <div><label>Email</label><input [(ngModel)]="editando.email"></div>
+        <div><label>Telefone</label><input [(ngModel)]="editando.telefone"></div>
+        <div><label>Instituição</label><input [(ngModel)]="editando.instituicao"></div>
+        <div><label>Unidade</label><input [(ngModel)]="editando.unidade"></div>
       </div>
       <div style="margin-top:12px">
         <label>Observações</label>

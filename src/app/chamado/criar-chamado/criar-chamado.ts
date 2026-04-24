@@ -21,6 +21,9 @@ export class CriarChamadoComponent implements OnInit {
   categorias: any[] = [];
   categoriasFiltradas: any[] = [];
 
+  solicitantesBusca: any[] = [];
+  mostrarSugestoes = false;
+
   form = {
     titulo: '',
     descricao: '',
@@ -48,15 +51,15 @@ export class CriarChamadoComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
- async ngOnInit() {
-  await Promise.all([
-    this.carregarSetores(),
-    this.carregarInstituicoes(),
-    this.carregarCategorias()
-  ]);
-  this.categoriasFiltradas = this.categorias;
-  this.cdr.detectChanges();
-}
+  async ngOnInit() {
+    await Promise.all([
+      this.carregarSetores(),
+      this.carregarInstituicoes(),
+      this.carregarCategorias()
+    ]);
+    this.categoriasFiltradas = this.categorias;
+    this.cdr.detectChanges();
+  }
 
   async carregarSetores() {
     this.setores = await this.api.get('/setores');
@@ -68,38 +71,64 @@ export class CriarChamadoComponent implements OnInit {
 
   async carregarCategorias() {
     this.categorias = await this.api.get('/categorias');
-  }
-
- onCategoriaChange(event: Event) {
-  const select = event.target as HTMLSelectElement;
-  const cat = this.categorias.find((c: any) => c.nome === select.value);
-  this.form.categoria = select.value;
-
-  if (cat) {
-    this.sla = { resposta: cat.sla_resposta, solucao: cat.sla_solucao };
-    // Preenche setor automaticamente se categoria tiver setor vinculado
-    if (cat.setor_nome) {
-      this.form.setor_destino = cat.setor_nome;
-    }
-  } else {
-    this.sla = { resposta: '', solucao: '' };
-  }
-}
-
-onSetorChange(event: Event) {
-  const select = event.target as HTMLSelectElement;
-  this.form.setor_destino = select.value;
-  // Filtra categorias do setor selecionado
-  const setor = this.setores.find((s: any) => s.nome === select.value);
-  if (setor) {
-    this.categoriasFiltradas = this.categorias.filter(
-      (c: any) => c.setor_id === setor.id || !c.setor_id
-    );
-  } else {
     this.categoriasFiltradas = this.categorias;
   }
-  this.cdr.detectChanges();
-}
+
+  onSetorChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.form.setor_destino = select.value;
+    const setor = this.setores.find(s => s.nome === select.value);
+    if (setor) {
+      this.categoriasFiltradas = this.categorias.filter(
+        (c: any) => c.setor_id === setor.id || !c.setor_id
+      );
+    } else {
+      this.categoriasFiltradas = this.categorias;
+    }
+    this.form.categoria = '';
+    this.sla = { resposta: '', solucao: '' };
+    this.cdr.detectChanges();
+  }
+
+  onCategoriaChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const cat = this.categorias.find((c: any) => c.nome === select.value);
+    this.form.categoria = select.value;
+    if (cat) {
+      this.sla = { resposta: cat.sla_resposta || '', solucao: cat.sla_solucao || '' };
+      // Preenche setor automaticamente APENAS se a categoria tiver setor vinculado
+      if (cat.setor_id && cat.setor_nome) {
+        this.form.setor_destino = cat.setor_nome;
+      }
+    } else {
+      this.sla = { resposta: '', solucao: '' };
+    }
+  }
+
+  async buscarSolicitante(event: any) {
+    const termo = event.target.value;
+    if (termo.length < 2) {
+      this.solicitantesBusca = [];
+      this.mostrarSugestoes = false;
+      return;
+    }
+    this.solicitantesBusca = await this.api.get(
+      `/solicitantes?busca=${encodeURIComponent(termo)}`
+    );
+    this.mostrarSugestoes = true;
+    this.cdr.detectChanges();
+  }
+
+  selecionarSolicitante(s: any) {
+    this.form.solicitante_nome = s.nome;
+    this.form.solicitante_email = s.email || '';
+    this.form.solicitante_telefone = s.telefone || '';
+    this.form.instituicao = s.instituicao || '';
+    this.form.unidade = s.unidade || '';
+    this.mostrarSugestoes = false;
+    this.solicitantesBusca = [];
+    this.cdr.detectChanges();
+  }
 
   enviarObservacao() {
     if (!this.novaObservacao.trim()) return;
@@ -121,8 +150,31 @@ onSetorChange(event: Event) {
     this.erro = '';
 
     try {
+      // Salva solicitante automaticamente se não existir
+      if (this.form.solicitante_nome.trim()) {
+        const existentes = await this.api.get(
+          `/solicitantes?busca=${encodeURIComponent(this.form.solicitante_nome)}`
+        );
+        const jaExiste = existentes.find(
+          (s: any) => s.nome.toLowerCase() === this.form.solicitante_nome.toLowerCase()
+        );
+
+        if (!jaExiste) {
+          await this.api.post('/solicitantes', {
+            nome: this.form.solicitante_nome,
+            email: this.form.solicitante_email,
+            telefone: this.form.solicitante_telefone,
+            instituicao: this.form.instituicao,
+            unidade: this.form.unidade,
+            observacoes: ''
+          });
+        }
+      }
+
       const resultado = await this.api.post('/chamados', {
         ...this.form,
+        sla_resposta: this.sla.resposta,
+        sla_solucao: this.sla.solucao,
         usuario_id: this.usuarioLogado.id
       });
 
@@ -139,32 +191,4 @@ onSetorChange(event: Event) {
       this.cdr.detectChanges();
     }
   }
-
-  solicitantesBusca: any[] = [];
-mostrarSugestoes = false;
-
-async buscarSolicitante(event: any) {
-  const termo = event.target.value;
-  if (termo.length < 2) {
-    this.solicitantesBusca = [];
-    return;
-  }
-  this.solicitantesBusca = await this.api.get(
-    `/solicitantes?busca=${encodeURIComponent(termo)}`
-  );
-  this.mostrarSugestoes = true;
-  this.cdr.detectChanges();
-}
-
-selecionarSolicitante(s: any) {
-  this.form.solicitante_nome = s.nome;
-  this.form.solicitante_email = s.email;
-  this.form.solicitante_telefone = s.telefone;
-  this.form.instituicao = s.instituicao;
-  this.form.unidade = s.unidade;
-  this.mostrarSugestoes = false;
-  this.solicitantesBusca = [];
-  this.cdr.detectChanges();
-}
-
 }

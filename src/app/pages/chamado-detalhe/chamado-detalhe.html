@@ -124,80 +124,122 @@
     </div>
 
     <!-- COLUNA DIREITA -->
-    <div class="coluna-lateral">
+    <!-- COLUNA DIREITA -->
+<div class="coluna-lateral">
 
-      <div class="card">
-        <h3>📋 Histórico</h3>
-        <div class="timeline">
-          <div class="timeline-item" *ngFor="let m of movimentacoes">
-            <div class="timeline-dot" [ngClass]="getTipoClass(m.tipo)"></div>
-            <div class="timeline-conteudo">
-              <div class="timeline-header">
-                <strong>{{ m.usuario_nome }}</strong>
-                <span class="tipo" [ngClass]="getTipoClass(m.tipo)">{{ m.tipo }}</span>
-              </div>
-              <p *ngIf="m.tipo === 'conclusao'" class="texto-conclusao">
-                ✅ <strong>Conclusão:</strong> {{ m.descricao }}
-              </p>
-              <p *ngIf="m.tipo === 'rejeicao'" class="texto-rejeicao">
-                ❌ <strong>Motivo:</strong> {{ m.descricao }}
-              </p>
-              <p *ngIf="m.tipo === 'redirecionamento'" class="texto-redirecionamento">
-                🔀 {{ m.descricao }}
-              </p>
-              <p *ngIf="m.tipo !== 'conclusao' && m.tipo !== 'rejeicao' && m.tipo !== 'redirecionamento'">
-                {{ m.descricao }}
-              </p>
-              <small>{{ m.data }}</small>
-            </div>
+  <!-- COMENTÁRIOS INTERNOS -->
+  <div class="card card-lateral">
+    <div class="card-lateral-header comentario-header-cor">
+      <span>💬</span>
+      <h3>Comentários Internos</h3>
+    </div>
+
+    <div class="comentarios">
+      <div class="comentario-item" *ngFor="let c of comentarios">
+        <div class="comentario-meta">
+          <strong>{{ c.usuario_nome }}</strong>
+          <small>{{ c.data }}</small>
+        </div>
+        <p>{{ c.texto }}</p>
+      </div>
+      <p class="vazio-lateral" *ngIf="comentarios.length === 0">
+        Nenhum comentário ainda.
+      </p>
+    </div>
+
+    <div class="novo-comentario">
+      <textarea [(ngModel)]="novoComentario"
+        placeholder="Digite um comentário interno..."
+        rows="3">
+      </textarea>
+      <button class="btn-enviar-comentario" (click)="enviarComentario()">
+        Enviar Comentário
+      </button>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="card card-lateral">
+    <div class="card-lateral-header historico-header-cor">
+      <span>📋</span>
+      <h3>Histórico</h3>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item" *ngFor="let m of movimentacoes">
+        <div class="timeline-dot" [ngClass]="getTipoClass(m.tipo)"></div>
+        <div class="timeline-conteudo">
+          <div class="timeline-header">
+            <strong>{{ m.usuario_nome }}</strong>
+            <span class="tipo" [ngClass]="getTipoClass(m.tipo)">{{ m.tipo }}</span>
           </div>
-          <p *ngIf="movimentacoes.length === 0">Nenhuma movimentação.</p>
+          <p *ngIf="m.tipo === 'conclusao'" class="texto-conclusao">
+            ✅ <strong>Conclusão:</strong> {{ m.descricao }}
+          </p>
+          <p *ngIf="m.tipo === 'rejeicao'" class="texto-rejeicao">
+            ❌ <strong>Motivo:</strong> {{ m.descricao }}
+          </p>
+          <p *ngIf="m.tipo === 'redirecionamento'" class="texto-redirecionamento">
+            🔀 {{ m.descricao }}
+          </p>
+          <p *ngIf="m.tipo !== 'conclusao' && m.tipo !== 'rejeicao' && m.tipo !== 'redirecionamento'">
+            {{ m.descricao }}
+          </p>
+          <small>{{ m.data }}</small>
         </div>
       </div>
+      <p class="vazio-lateral" *ngIf="movimentacoes.length === 0">
+        Nenhuma movimentação.
+      </p>
+    </div>
+  </div>
 
-      <div class="card">
-        <h3>💬 Comentários Internos</h3>
-        <div class="comentarios">
-          <div class="comentario-item" *ngFor="let c of comentarios">
-            <div class="comentario-header">
-              <strong>{{ c.usuario_nome }}</strong>
-              <small>{{ c.data }}</small>
-            </div>
-            <p>{{ c.texto }}</p>
-          </div>
-          <p *ngIf="comentarios.length === 0">Nenhum comentário ainda.</p>
-        </div>
-        <div class="novo-comentario">
-          <textarea [(ngModel)]="novoComentario"
-            placeholder="Digite um comentário interno..."
-            rows="3">
-          </textarea>
-          <button (click)="enviarComentario()">Enviar</button>
-        </div>
-      </div>
+  <!-- ANEXOS -->
+  <div class="card card-lateral">
+    <div class="card-lateral-header anexo-header-cor">
+      <span>📎</span>
+      <h3>Anexos</h3>
+    </div>
 
-      <div class="card">
-        <h3>📎 Anexos</h3>
-        <div class="anexos-lista">
-          <div class="anexo-item" *ngFor="let a of anexos">
-            <a [href]="apiUrl + '/uploads/' + a.caminho" target="_blank">
-              📄 {{ a.nome }}
-            </a>
-            <small>{{ a.data }}</small>
-          </div>
-          <p *ngIf="anexos.length === 0">Nenhum anexo.</p>
+    <div class="anexos-lista">
+      <a class="anexo-item"
+        *ngFor="let a of anexos"
+        [href]="apiUrl + '/uploads/' + a.caminho"
+        target="_blank">
+        <div class="anexo-icone">📄</div>
+        <div class="anexo-info">
+          <span class="anexo-nome">{{ a.nome }}</span>
+          <small>{{ a.data }}</small>
         </div>
-        <div class="novo-anexo">
-          <input type="file" (change)="onArquivoSelecionado($event)">
-          <button (click)="enviarAnexo()" [disabled]="!arquivoSelecionado">
-            Enviar Anexo
-          </button>
-        </div>
-      </div>
+        <span class="anexo-baixar">↓</span>
+      </a>
+      <p class="vazio-lateral" *ngIf="anexos.length === 0">
+        Nenhum anexo ainda.
+      </p>
+    </div>
 
+    <div class="upload-area">
+      <label class="upload-label" for="fileInput">
+        <div class="upload-icone">📁</div>
+        <div class="upload-texto">
+          <span *ngIf="!arquivoSelecionado">Clique para selecionar um arquivo</span>
+          <span *ngIf="arquivoSelecionado" class="arquivo-nome">
+            {{ arquivoSelecionado.name }}
+          </span>
+        </div>
+      </label>
+      <input id="fileInput" type="file" style="display:none"
+        (change)="onArquivoSelecionado($event)">
+      <button class="btn-enviar-anexo"
+        (click)="enviarAnexo()"
+        [disabled]="!arquivoSelecionado">
+        Enviar Anexo
+      </button>
     </div>
 
   </div>
+
+</div>
 
   <!-- MODAL CONCLUSÃO -->
   <div class="modal-backdrop" *ngIf="mostrarModalConclusao">
