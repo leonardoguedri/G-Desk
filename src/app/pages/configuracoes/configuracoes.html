@@ -1,18 +1,18 @@
 <div class="config-container">
 
-  <h2>Configurações do Sistema</h2>
+  <h2>⚙️ Configurações do Sistema</h2>
 
   <div class="abas">
     <button (click)="setAba('usuarios')" [class.active]="abaAtiva === 'usuarios'">Usuários</button>
     <button (click)="setAba('setores')" [class.active]="abaAtiva === 'setores'">Setores</button>
     <button (click)="setAba('instituicoes')" [class.active]="abaAtiva === 'instituicoes'">Instituições</button>
+    <button (click)="setAba('unidades')" [class.active]="abaAtiva === 'unidades'">Unidades</button>
     <button (click)="setAba('categorias')" [class.active]="abaAtiva === 'categorias'">Categorias e SLA</button>
   </div>
 
   <!-- USUÁRIOS -->
   <div *ngIf="abaAtiva === 'usuarios'" class="card">
     <h3>Usuários</h3>
-
     <div class="form-inline">
       <input placeholder="Nome" [(ngModel)]="novoUsuario.nome">
       <input placeholder="Email" [(ngModel)]="novoUsuario.email">
@@ -25,18 +25,14 @@
       <button class="btn-add" (click)="criarUsuario()">+ Adicionar</button>
     </div>
 
-    <!-- MODAL EDIÇÃO USUÁRIO -->
     <div class="modal-backdrop" *ngIf="editandoUsuario">
       <div class="modal">
         <h4>Editar Usuário</h4>
-        <label>Nome</label>
-        <input [(ngModel)]="editandoUsuario.nome">
-        <label>Email</label>
-        <input [(ngModel)]="editandoUsuario.email">
+        <label>Nome</label><input [(ngModel)]="editandoUsuario.nome">
+        <label>Email</label><input [(ngModel)]="editandoUsuario.email">
         <label>Nova Senha (deixe vazio para não alterar)</label>
         <input type="password" [(ngModel)]="editandoUsuario.senha" placeholder="Nova senha">
-        <label>Setor</label>
-        <input [(ngModel)]="editandoUsuario.setor">
+        <label>Setor</label><input [(ngModel)]="editandoUsuario.setor">
         <label>Perfil</label>
         <select [(ngModel)]="editandoUsuario.perfil">
           <option value="user">Usuário</option>
@@ -50,21 +46,11 @@
     </div>
 
     <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Email</th>
-          <th>Setor</th>
-          <th>Perfil</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Nome</th><th>Email</th><th>Setor</th><th>Perfil</th><th>Ações</th></tr></thead>
       <tbody>
         <tr *ngFor="let u of usuarios">
-          <td>{{ u.nome }}</td>
-          <td>{{ u.email }}</td>
-          <td>{{ u.setor || '-' }}</td>
-          <td>{{ u.perfil }}</td>
+          <td>{{ u.nome }}</td><td>{{ u.email }}</td>
+          <td>{{ u.setor || '-' }}</td><td>{{ u.perfil }}</td>
           <td>
             <button class="btn-edit" (click)="editarUsuario(u)">Editar</button>
             <button class="btn-del" (click)="deletarUsuario(u.id)">Excluir</button>
@@ -77,18 +63,15 @@
   <!-- SETORES -->
   <div *ngIf="abaAtiva === 'setores'" class="card">
     <h3>Setores</h3>
-
     <div class="form-inline">
       <input placeholder="Nome do setor" [(ngModel)]="novoSetor.nome">
       <button class="btn-add" (click)="criarSetor()">+ Adicionar</button>
     </div>
 
-    <!-- MODAL EDIÇÃO SETOR -->
     <div class="modal-backdrop" *ngIf="editandoSetor">
       <div class="modal">
         <h4>Editar Setor</h4>
-        <label>Nome</label>
-        <input [(ngModel)]="editandoSetor.nome">
+        <label>Nome</label><input [(ngModel)]="editandoSetor.nome">
         <div class="modal-acoes">
           <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
           <button class="btn-salvar" (click)="salvarSetor()">Salvar</button>
@@ -97,12 +80,7 @@
     </div>
 
     <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Nome</th><th>Ações</th></tr></thead>
       <tbody>
         <tr *ngFor="let s of setores">
           <td>{{ s.nome }}</td>
@@ -118,21 +96,17 @@
   <!-- INSTITUIÇÕES -->
   <div *ngIf="abaAtiva === 'instituicoes'" class="card">
     <h3>Instituições</h3>
-
     <div class="form-inline">
       <input placeholder="Nome" [(ngModel)]="novaInstituicao.nome">
       <input placeholder="Cidade" [(ngModel)]="novaInstituicao.cidade">
       <button class="btn-add" (click)="criarInstituicao()">+ Adicionar</button>
     </div>
 
-    <!-- MODAL EDIÇÃO INSTITUIÇÃO -->
     <div class="modal-backdrop" *ngIf="editandoInstituicao">
       <div class="modal">
         <h4>Editar Instituição</h4>
-        <label>Nome</label>
-        <input [(ngModel)]="editandoInstituicao.nome">
-        <label>Cidade</label>
-        <input [(ngModel)]="editandoInstituicao.cidade">
+        <label>Nome</label><input [(ngModel)]="editandoInstituicao.nome">
+        <label>Cidade</label><input [(ngModel)]="editandoInstituicao.cidade">
         <div class="modal-acoes">
           <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
           <button class="btn-salvar" (click)="salvarInstituicao()">Salvar</button>
@@ -141,17 +115,10 @@
     </div>
 
     <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Cidade</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Nome</th><th>Cidade</th><th>Ações</th></tr></thead>
       <tbody>
         <tr *ngFor="let i of instituicoes">
-          <td>{{ i.nome }}</td>
-          <td>{{ i.cidade }}</td>
+          <td>{{ i.nome }}</td><td>{{ i.cidade }}</td>
           <td>
             <button class="btn-edit" (click)="editarInstituicao(i)">Editar</button>
             <button class="btn-del" (click)="deletarInstituicao(i.id)">Excluir</button>
@@ -161,67 +128,102 @@
     </table>
   </div>
 
-  <!-- CATEGORIAS -->
- <div *ngIf="abaAtiva === 'categorias'" class="card">
-  <h3>Categorias e SLA</h3>
+  <!-- UNIDADES -->
+  <div *ngIf="abaAtiva === 'unidades'" class="card">
+    <h3>Unidades</h3>
 
-  <div class="form-inline">
-    <input placeholder="Nome da categoria" [(ngModel)]="novaCategoria.nome">
-    <input placeholder="SLA Resposta (ex: 2h)" [(ngModel)]="novaCategoria.sla_resposta">
-    <input placeholder="SLA Solução (ex: 8h)" [(ngModel)]="novaCategoria.sla_solucao">
-    <select [(ngModel)]="novaCategoria.setor_id">
-      <option value="">Setor (opcional)</option>
-      <option *ngFor="let s of setores" [value]="s.id">{{ s.nome }}</option>
-    </select>
-    <button class="btn-add" (click)="criarCategoria()">+ Adicionar</button>
-  </div>
-
-  <!-- MODAL EDIÇÃO CATEGORIA -->
-  <div class="modal-backdrop" *ngIf="editandoCategoria">
-    <div class="modal">
-      <h4>Editar Categoria</h4>
-      <label>Nome</label>
-      <input [(ngModel)]="editandoCategoria.nome">
-      <label>SLA Resposta</label>
-      <input [(ngModel)]="editandoCategoria.sla_resposta">
-      <label>SLA Solução</label>
-      <input [(ngModel)]="editandoCategoria.sla_solucao">
-      <label>Setor Vinculado</label>
-      <select [(ngModel)]="editandoCategoria.setor_id">
-        <option value="">Nenhum</option>
-        <option *ngFor="let s of setores" [value]="s.id">{{ s.nome }}</option>
+    <div class="form-inline">
+      <input placeholder="Nome da unidade" [(ngModel)]="novaUnidade.nome">
+      <select [(ngModel)]="novaUnidade.instituicao_id">
+        <option value="">Selecione a Instituição</option>
+        <option *ngFor="let i of instituicoes" [value]="i.id">{{ i.nome }}</option>
       </select>
-      <div class="modal-acoes">
-        <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
-        <button class="btn-salvar" (click)="salvarCategoria()">Salvar</button>
+      <button class="btn-add" (click)="criarUnidade()">+ Adicionar</button>
+    </div>
+
+    <div class="form-filtro-unidade">
+      <label>Filtrar por instituição:</label>
+      <select [(ngModel)]="instituicaoFiltroUnidade" (change)="filtrarUnidades()">
+        <option value="">Todas</option>
+        <option *ngFor="let i of instituicoes" [value]="i.nome">{{ i.nome }}</option>
+      </select>
+    </div>
+
+    <div class="modal-backdrop" *ngIf="editandoUnidade">
+      <div class="modal">
+        <h4>Editar Unidade</h4>
+        <label>Nome</label><input [(ngModel)]="editandoUnidade.nome">
+        <label>Instituição</label>
+        <select [(ngModel)]="editandoUnidade.instituicao_id">
+          <option *ngFor="let i of instituicoes" [value]="i.id">{{ i.nome }}</option>
+        </select>
+        <div class="modal-acoes">
+          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn-salvar" (click)="salvarUnidade()">Salvar</button>
+        </div>
       </div>
     </div>
+
+    <table>
+      <thead><tr><th>Unidade</th><th>Instituição</th><th>Ações</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let u of unidadesFiltradas">
+          <td>{{ u.nome }}</td>
+          <td>{{ u.instituicao_nome || getNomeInstituicao(u.instituicao_id) }}</td>
+          <td>
+            <button class="btn-edit" (click)="editarUnidade(u)">Editar</button>
+            <button class="btn-del" (click)="deletarUnidade(u.id)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>SLA Resposta</th>
-        <th>SLA Solução</th>
-        <th>Setor</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let c of categorias">
-        <td>{{ c.nome }}</td>
-        <td>{{ c.sla_resposta }}</td>
-        <td>{{ c.sla_solucao }}</td>
-        <td>{{ c.setor_nome || '-' }}</td>
-        <td>
-          <button class="btn-edit" (click)="editarCategoria(c)">Editar</button>
-          <button class="btn-del" (click)="deletarCategoria(c.id)">Excluir</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- CATEGORIAS -->
+  <div *ngIf="abaAtiva === 'categorias'" class="card">
+    <h3>Categorias e SLA</h3>
+    <div class="form-inline">
+      <input placeholder="Nome da categoria" [(ngModel)]="novaCategoria.nome">
+      <input placeholder="SLA Resposta (ex: 2h)" [(ngModel)]="novaCategoria.sla_resposta">
+      <input placeholder="SLA Solução (ex: 8h)" [(ngModel)]="novaCategoria.sla_solucao">
+      <select [(ngModel)]="novaCategoria.setor_id">
+        <option value="">Setor (opcional)</option>
+        <option *ngFor="let s of setores" [value]="s.id">{{ s.nome }}</option>
+      </select>
+      <button class="btn-add" (click)="criarCategoria()">+ Adicionar</button>
+    </div>
 
+    <div class="modal-backdrop" *ngIf="editandoCategoria">
+      <div class="modal">
+        <h4>Editar Categoria</h4>
+        <label>Nome</label><input [(ngModel)]="editandoCategoria.nome">
+        <label>SLA Resposta</label><input [(ngModel)]="editandoCategoria.sla_resposta">
+        <label>SLA Solução</label><input [(ngModel)]="editandoCategoria.sla_solucao">
+        <label>Setor Vinculado</label>
+        <select [(ngModel)]="editandoCategoria.setor_id">
+          <option value="">Nenhum</option>
+          <option *ngFor="let s of setores" [value]="s.id">{{ s.nome }}</option>
+        </select>
+        <div class="modal-acoes">
+          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn-salvar" (click)="salvarCategoria()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Nome</th><th>SLA Resposta</th><th>SLA Solução</th><th>Setor</th><th>Ações</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let c of categorias">
+          <td>{{ c.nome }}</td><td>{{ c.sla_resposta }}</td>
+          <td>{{ c.sla_solucao }}</td><td>{{ c.setor_nome || '-' }}</td>
+          <td>
+            <button class="btn-edit" (click)="editarCategoria(c)">Editar</button>
+            <button class="btn-del" (click)="deletarCategoria(c.id)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
 </div>

@@ -20,16 +20,22 @@ export class ConfiguracoesComponent implements OnInit {
   setores: any[] = [];
   instituicoes: any[] = [];
   categorias: any[] = [];
+  unidades: any[] = [];
+  unidadesFiltradas: any[] = [];
 
   novoUsuario = { nome: '', email: '', senha: '', perfil: 'user', setor: '' };
   novoSetor = { nome: '' };
   novaInstituicao = { nome: '', cidade: '' };
   novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '', setor_id: '' };
+  novaUnidade = { nome: '', instituicao_id: '' };
 
   editandoUsuario: any = null;
   editandoSetor: any = null;
   editandoInstituicao: any = null;
   editandoCategoria: any = null;
+  editandoUnidade: any = null;
+
+  instituicaoFiltroUnidade = '';
 
   constructor(
     private router: Router,
@@ -50,7 +56,8 @@ export class ConfiguracoesComponent implements OnInit {
       this.carregarUsuarios(),
       this.carregarSetores(),
       this.carregarInstituicoes(),
-      this.carregarCategorias()
+      this.carregarCategorias(),
+      this.carregarUnidades()
     ]);
     this.cdr.detectChanges();
   }
@@ -71,6 +78,24 @@ export class ConfiguracoesComponent implements OnInit {
     this.categorias = await this.api.get('/categorias');
   }
 
+  async carregarUnidades() {
+    this.unidades = await this.api.get('/unidades');
+    this.filtrarUnidades();
+  }
+
+  filtrarUnidades() {
+    if (this.instituicaoFiltroUnidade) {
+      const inst = this.instituicoes.find(i => i.nome === this.instituicaoFiltroUnidade);
+      if (inst) {
+        this.unidadesFiltradas = this.unidades.filter(u => u.instituicao_id === inst.id);
+      } else {
+        this.unidadesFiltradas = this.unidades;
+      }
+    } else {
+      this.unidadesFiltradas = this.unidades;
+    }
+  }
+
   // USUÁRIOS
   async criarUsuario() {
     if (!this.novoUsuario.nome || !this.novoUsuario.email || !this.novoUsuario.senha) return;
@@ -80,9 +105,7 @@ export class ConfiguracoesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  editarUsuario(u: any) {
-    this.editandoUsuario = { ...u, senha: '' };
-  }
+  editarUsuario(u: any) { this.editandoUsuario = { ...u, senha: '' }; }
 
   async salvarUsuario() {
     if (!this.editandoUsuario) return;
@@ -107,9 +130,7 @@ export class ConfiguracoesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  editarSetor(s: any) {
-    this.editandoSetor = { ...s };
-  }
+  editarSetor(s: any) { this.editandoSetor = { ...s }; }
 
   async salvarSetor() {
     if (!this.editandoSetor) return;
@@ -134,9 +155,7 @@ export class ConfiguracoesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  editarInstituicao(i: any) {
-    this.editandoInstituicao = { ...i };
-  }
+  editarInstituicao(i: any) { this.editandoInstituicao = { ...i }; }
 
   async salvarInstituicao() {
     if (!this.editandoInstituicao) return;
@@ -154,16 +173,14 @@ export class ConfiguracoesComponent implements OnInit {
 
   // CATEGORIAS
   async criarCategoria() {
-  if (!this.novaCategoria.nome) return;
-  await this.api.post('/categorias', this.novaCategoria);
-  this.novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '', setor_id: '' };
-  await this.carregarCategorias();
-  this.cdr.detectChanges();
-}
+    if (!this.novaCategoria.nome) return;
+    await this.api.post('/categorias', this.novaCategoria);
+    this.novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '', setor_id: '' };
+    await this.carregarCategorias();
+    this.cdr.detectChanges();
+  }
 
-editarCategoria(c: any) {
-  this.editandoCategoria = { ...c, setor_id: c.setor_id || '' };
-}
+  editarCategoria(c: any) { this.editandoCategoria = { ...c, setor_id: c.setor_id || '' }; }
 
   async salvarCategoria() {
     if (!this.editandoCategoria) return;
@@ -179,8 +196,29 @@ editarCategoria(c: any) {
     this.cdr.detectChanges();
   }
 
-  setAba(aba: string) {
-    this.abaAtiva = aba;
+  // UNIDADES
+  async criarUnidade() {
+    if (!this.novaUnidade.nome || !this.novaUnidade.instituicao_id) return;
+    await this.api.post('/unidades', this.novaUnidade);
+    this.novaUnidade = { nome: '', instituicao_id: '' };
+    await this.carregarUnidades();
+    this.cdr.detectChanges();
+  }
+
+  editarUnidade(u: any) { this.editandoUnidade = { ...u }; }
+
+  async salvarUnidade() {
+    if (!this.editandoUnidade) return;
+    await this.api.put(`/unidades/${this.editandoUnidade.id}`, this.editandoUnidade);
+    this.editandoUnidade = null;
+    await this.carregarUnidades();
+    this.cdr.detectChanges();
+  }
+
+  async deletarUnidade(id: number) {
+    await this.api.delete(`/unidades/${id}`);
+    await this.carregarUnidades();
+    this.cdr.detectChanges();
   }
 
   cancelarEdicao() {
@@ -188,5 +226,13 @@ editarCategoria(c: any) {
     this.editandoSetor = null;
     this.editandoInstituicao = null;
     this.editandoCategoria = null;
+    this.editandoUnidade = null;
+  }
+
+  setAba(aba: string) { this.abaAtiva = aba; }
+
+  getNomeInstituicao(id: number) {
+    const inst = this.instituicoes.find(i => i.id === id);
+    return inst ? inst.nome : '-';
   }
 }

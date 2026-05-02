@@ -167,3 +167,19 @@ td {
   border-radius: 6px;
   cursor: pointer;
 }
+
+.form-filtro-unidade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.form-filtro-unidade select {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+}

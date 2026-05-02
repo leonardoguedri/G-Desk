@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../auth/auth.service';
+import jsPDF from 'jspdf';
+
 
 @Component({
   selector: 'app-chamado-detalhe',
@@ -231,4 +233,132 @@ export class ChamadoDetalheComponent implements OnInit {
   voltar() {
     this.router.navigate(['/dashboard']);
   }
+  gerarPDF() {
+  const doc = new jsPDF();
+  const c = this.chamado;
+  let y = 20;
+
+  const linha = () => {
+    doc.setDrawColor(220, 220, 220);
+    doc.line(14, y, 196, y);
+    y += 6;
+  };
+
+  const titulo = (texto: string) => {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text(texto, 14, y);
+    y += 6;
+    linha();
+  };
+
+  const campo = (label: string, valor: string) => {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text(label + ':', 14, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+    doc.text(valor || '-', 60, y);
+    y += 7;
+  };
+
+  // CABEÇALHO
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 58, 95);
+  doc.text('G-Desk — Detalhes do Chamado', 14, y);
+  y += 8;
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 120, 120);
+  doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, y);
+  y += 10;
+  linha();
+
+  // DADOS DE ABERTURA
+  titulo('DADOS DE ABERTURA');
+  campo('Protocolo', c.protocolo);
+  campo('Status', c.status);
+  campo('Data', c.data_criacao);
+  campo('Criado por', c.criador_nome);
+  campo('Setor Abertura', c.setor_abertura);
+  y += 2;
+
+  // SOLICITANTE
+  titulo('SOLICITANTE');
+  campo('Nome', c.solicitante_nome);
+  campo('Email', c.solicitante_email);
+  campo('Telefone', c.solicitante_telefone);
+  campo('Instituição', c.instituicao);
+  campo('Unidade', c.unidade);
+  y += 2;
+
+  // IDENTIFICAÇÃO
+  titulo('IDENTIFICAÇÃO DA SOLICITAÇÃO');
+  campo('Categoria', c.categoria);
+  campo('Prioridade', c.prioridade);
+  campo('Setor Destino', c.setor_destino);
+  campo('Canal', c.canal);
+  campo('Responsável', c.responsavel_nome || 'Não atribuído');
+  y += 2;
+
+  // SLA
+  titulo('SLA');
+  campo('SLA Resposta', c.sla_resposta);
+  campo('SLA Solução', c.sla_solucao);
+  y += 2;
+
+  // DESCRIÇÃO
+  titulo('DESCRIÇÃO');
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 30, 30);
+  const descricaoLinhas = doc.splitTextToSize(c.descricao || '-', 180);
+  doc.text(descricaoLinhas, 14, y);
+  y += descricaoLinhas.length * 5 + 6;
+
+  // HISTÓRICO
+  if (this.movimentacoes.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    titulo('HISTÓRICO DE MOVIMENTAÇÕES');
+    for (const m of this.movimentacoes) {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(60, 60, 60);
+      doc.text(`[${m.tipo.toUpperCase()}] ${m.usuario_nome} — ${m.data}`, 14, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      const linhas = doc.splitTextToSize(m.descricao || '', 180);
+      doc.text(linhas, 14, y);
+      y += linhas.length * 5 + 4;
+    }
+    y += 2;
+  }
+
+  // COMENTÁRIOS
+  if (this.comentarios.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    titulo('COMENTÁRIOS INTERNOS');
+    for (const com of this.comentarios) {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(60, 60, 60);
+      doc.text(`${com.usuario_nome} — ${com.data}`, 14, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      const linhas = doc.splitTextToSize(com.texto || '', 180);
+      doc.text(linhas, 14, y);
+      y += linhas.length * 5 + 4;
+    }
+  }
+
+  doc.save(`chamado-${c.protocolo}.pdf`);
+}
 }

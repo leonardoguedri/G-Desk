@@ -75,35 +75,47 @@ export class CriarChamadoComponent implements OnInit {
   }
 
   onSetorChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.form.setor_destino = select.value;
-    const setor = this.setores.find(s => s.nome === select.value);
-    if (setor) {
-      this.categoriasFiltradas = this.categorias.filter(
-        (c: any) => c.setor_id === setor.id || !c.setor_id
-      );
-    } else {
-      this.categoriasFiltradas = this.categorias;
-    }
-    this.form.categoria = '';
-    this.sla = { resposta: '', solucao: '' };
-    this.cdr.detectChanges();
+  const select = event.target as HTMLSelectElement;
+  this.form.setor_destino = select.value;
+  const setor = this.setores.find((s: any) => s.nome === select.value);
+  if (setor) {
+    this.categoriasFiltradas = this.categorias.filter(
+      (c: any) => c.setor_id === setor.id || !c.setor_id
+    );
+  } else {
+    this.categoriasFiltradas = this.categorias;
   }
+  this.form.categoria = '';
+  this.sla = { resposta: '', solucao: '' };
+  this.cdr.detectChanges();
+}
 
-  onCategoriaChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const cat = this.categorias.find((c: any) => c.nome === select.value);
-    this.form.categoria = select.value;
-    if (cat) {
-      this.sla = { resposta: cat.sla_resposta || '', solucao: cat.sla_solucao || '' };
-      // Preenche setor automaticamente APENAS se a categoria tiver setor vinculado
-      if (cat.setor_id && cat.setor_nome) {
-        this.form.setor_destino = cat.setor_nome;
+onCategoriaChange(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  const nomeCategoria = select.value;
+  this.form.categoria = nomeCategoria;
+
+  const cat = this.categorias.find((c: any) => c.nome === nomeCategoria);
+  if (cat) {
+    this.sla = {
+      resposta: cat.sla_resposta || '',
+      solucao: cat.sla_solucao || ''
+    };
+
+    if (cat.setor_id) {
+      const setor = this.setores.find((s: any) => s.id === cat.setor_id);
+      if (setor) {
+        this.form.setor_destino = setor.nome;
+        this.categoriasFiltradas = this.categorias.filter(
+          (c: any) => c.setor_id === setor.id || !c.setor_id
+        );
       }
-    } else {
-      this.sla = { resposta: '', solucao: '' };
     }
+  } else {
+    this.sla = { resposta: '', solucao: '' };
   }
+  this.cdr.detectChanges();
+}
 
   async buscarSolicitante(event: any) {
     const termo = event.target.value;
@@ -119,16 +131,25 @@ export class CriarChamadoComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  selecionarSolicitante(s: any) {
-    this.form.solicitante_nome = s.nome;
-    this.form.solicitante_email = s.email || '';
-    this.form.solicitante_telefone = s.telefone || '';
-    this.form.instituicao = s.instituicao || '';
-    this.form.unidade = s.unidade || '';
-    this.mostrarSugestoes = false;
-    this.solicitantesBusca = [];
-    this.cdr.detectChanges();
+  async selecionarSolicitante(s: any) {
+  this.form.solicitante_nome = s.nome;
+  this.form.solicitante_email = s.email || '';
+  this.form.solicitante_telefone = s.telefone || '';
+  this.form.instituicao = s.instituicao || '';
+  this.form.unidade = s.unidade || '';
+  this.mostrarSugestoes = false;
+  this.solicitantesBusca = [];
+
+  // Carrega as unidades da instituição do solicitante
+  if (s.instituicao) {
+    const inst = this.instituicoes.find((i: any) => i.nome === s.instituicao);
+    if (inst) {
+      this.unidades = await this.api.get(`/unidades?instituicao_id=${inst.id}`);
+    }
   }
+
+  this.cdr.detectChanges();
+}
 
   enviarObservacao() {
     if (!this.novaObservacao.trim()) return;
@@ -191,4 +212,20 @@ export class CriarChamadoComponent implements OnInit {
       this.cdr.detectChanges();
     }
   }
+  unidades: any[] = [];
+
+async onInstituicaoChange(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  this.form.instituicao = select.value;
+  this.form.unidade = '';
+
+  const inst = this.instituicoes.find((i: any) => i.nome === select.value);
+  if (inst) {
+    this.unidades = await this.api.get(`/unidades?instituicao_id=${inst.id}`);
+  } else {
+    this.unidades = [];
+  }
+  this.cdr.detectChanges();
 }
+}
+

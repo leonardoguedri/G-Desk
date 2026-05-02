@@ -1,10 +1,55 @@
+require('dotenv').config();
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'seuemail@gmail.com',
+    pass: process.env.EMAIL_PASS || 'sua_senha_de_app'
+  }
+});
+
+function enviarEmail(para, assunto, corpo) {
+  if (!para) return;
+  transporter.sendMail({
+    from: `"G-Desk" <${process.env.EMAIL_USER || 'seuemail@gmail.com'}>`,
+    to: para,
+    subject: assunto,
+    html: corpo
+  }, (err) => {
+    if (err) console.error('Erro ao enviar email:', err.message);
+    else console.log(`Email enviado para ${para}`);
+  });
+}
+
+function templateEmail(titulo, mensagem, protocolo) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #1e3a5f; padding: 20px; text-align: center;">
+        <h2 style="color: white; margin: 0;">G-Desk</h2>
+        <p style="color: #93c5fd; margin: 4px 0 0;">Sistema de Gestão de Chamados</p>
+      </div>
+      <div style="padding: 24px; background: #f9fafb;">
+        <h3 style="color: #1e3a5f;">${titulo}</h3>
+        <p style="color: #374151;">${mensagem}</p>
+        <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #2563eb; margin-top: 16px;">
+          <strong style="color: #6b7280;">Protocolo:</strong>
+          <span style="color: #1e3a5f; font-size: 18px; font-weight: bold; margin-left: 8px;">${protocolo}</span>
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">
+          Acesse o sistema para ver mais detalhes.
+        </p>
+      </div>
+    </div>
+  `;
+}
 const app = express();
 const SECRET = 'guedri_secret_2026';
 
@@ -151,11 +196,21 @@ function autenticar(req, res, next) {
 }
 
 function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuario_id) {
-  db.get(`SELECT id, protocolo, titulo, usuario_id, responsavel_id FROM chamados WHERE id=?`,
-    [chamado_id], (err, chamado) => {
+  db.get(
+    `SELECT c.id, c.protocolo, c.titulo, c.usuario_id, c.responsavel_id,
+     c.solicitante_email,
+     u1.email as email_criador, u1.nome as nome_criador,
+     u2.email as email_responsavel, u2.nome as nome_responsavel
+     FROM chamados c
+     LEFT JOIN usuarios u1 ON c.usuario_id = u1.id
+     LEFT JOIN usuarios u2 ON c.responsavel_id = u2.id
+     WHERE c.id=?`,
+    [chamado_id],
+    (err, chamado) => {
       if (err || !chamado) return;
       const data = new Date().toLocaleString('pt-BR');
 
+      // Notifica criador
       if (chamado.usuario_id && chamado.usuario_id !== excluir_usuario_id) {
         db.run(
           `INSERT INTO notificacoes_usuario
@@ -164,10 +219,24 @@ function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuar
           [chamado.usuario_id, chamado_id, chamado.protocolo,
            chamado.titulo, tipo, descricao, data]
         );
+
+        if (chamado.email_criador) {
+          enviarEmail(
+            chamado.email_criador,
+            `[G-Desk] Atualização no chamado ${chamado.protocolo}`,
+            templateEmail(
+              `Atualização no seu chamado`,
+              descricao,
+              chamado.protocolo
+            )
+          );
+        }
       }
 
-      if (chamado.responsavel_id && chamado.responsavel_id !== excluir_usuario_id
-          && chamado.responsavel_id !== chamado.usuario_id) {
+      // Notifica responsável
+      if (chamado.responsavel_id &&
+          chamado.responsavel_id !== excluir_usuario_id &&
+          chamado.responsavel_id !== chamado.usuario_id) {
         db.run(
           `INSERT INTO notificacoes_usuario
            (usuario_id, chamado_id, protocolo, titulo, tipo, descricao, data)
@@ -175,7 +244,42 @@ function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuar
           [chamado.responsavel_id, chamado_id, chamado.protocolo,
            chamado.titulo, tipo, descricao, data]
         );
+
+        if (chamado.email_responsavel) {
+          enviarEmail(
+            chamado.email_responsavel,
+            `[G-Desk] Atualização no chamado ${chamado.protocolo}`,
+            templateEmail(
+              `Atualização em chamado sob sua responsabilidade`,
+              descricao,
+              chamado.protocolo
+            )
+          );
+        }
       }
+    }
+  );
+}
+
+// Função separada para notificar solicitante apenas na conclusão
+function notificarSolicitante(chamado_id, texto_conclusao) {
+  db.get(
+    `SELECT protocolo, titulo, solicitante_email, solicitante_nome FROM chamados WHERE id=?`,
+    [chamado_id],
+    (err, chamado) => {
+      if (err || !chamado || !chamado.solicitante_email) return;
+
+      enviarEmail(
+        chamado.solicitante_email,
+        `[G-Desk] Seu chamado ${chamado.protocolo} foi concluído`,
+        templateEmail(
+          `Seu chamado foi concluído`,
+          `Olá ${chamado.solicitante_nome || ''},<br><br>
+           Seu chamado foi concluído com a seguinte resolução:<br><br>
+           <em>${texto_conclusao}</em>`,
+          chamado.protocolo
+        )
+      );
     }
   );
 }
@@ -439,6 +543,7 @@ app.put('/chamados/:id/concluir', autenticar, (req, res) => {
       );
       notificarCriadorEResponsavel(req.params.id, 'concluido',
         `Chamado concluído por ${usuario_nome}`, null);
+      notificarSolicitante(req.params.id, texto_conclusao);
       res.json({ sucesso: true });
     }
   );
@@ -740,6 +845,69 @@ app.put('/categorias/:id', autenticar, (req, res) => {
 
 app.delete('/categorias/:id', autenticar, (req, res) => {
   db.run(`DELETE FROM categorias WHERE id=?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json(err);
+    res.json({ sucesso: true });
+  });
+});
+
+db.run(`CREATE TABLE IF NOT EXISTS unidades (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome TEXT,
+  instituicao_id INTEGER,
+  FOREIGN KEY (instituicao_id) REFERENCES instituicoes(id)
+)`);
+
+// LISTAR UNIDADES
+app.get('/unidades', autenticar, (req, res) => {
+  const { instituicao_id } = req.query;
+  if (instituicao_id) {
+    db.all(
+      `SELECT * FROM unidades WHERE instituicao_id=? ORDER BY nome ASC`,
+      [instituicao_id],
+      (err, rows) => {
+        if (err) return res.status(500).json(err);
+        res.json(rows);
+      }
+    );
+  } else {
+    db.all(`SELECT u.*, i.nome as instituicao_nome FROM unidades u
+            LEFT JOIN instituicoes i ON u.instituicao_id = i.id
+            ORDER BY u.nome ASC`, [], (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    });
+  }
+});
+
+// CRIAR UNIDADE
+app.post('/unidades', autenticar, (req, res) => {
+  const { nome, instituicao_id } = req.body;
+  db.run(
+    `INSERT INTO unidades (nome, instituicao_id) VALUES (?, ?)`,
+    [nome, instituicao_id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ id: this.lastID });
+    }
+  );
+});
+
+// EDITAR UNIDADE
+app.put('/unidades/:id', autenticar, (req, res) => {
+  const { nome, instituicao_id } = req.body;
+  db.run(
+    `UPDATE unidades SET nome=?, instituicao_id=? WHERE id=?`,
+    [nome, instituicao_id, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+      res.json({ sucesso: true });
+    }
+  );
+});
+
+// DELETAR UNIDADE
+app.delete('/unidades/:id', autenticar, (req, res) => {
+  db.run(`DELETE FROM unidades WHERE id=?`, [req.params.id], function (err) {
     if (err) return res.status(500).json(err);
     res.json({ sucesso: true });
   });

@@ -60,53 +60,53 @@
       </div>
     </div>
     <div class="grid-2" style="margin-top: 20px;">
-      <div>
-        <label>Instituição</label>
-        <select [(ngModel)]="form.instituicao">
-          <option value="">Selecione</option>
-          <option *ngFor="let i of instituicoes" [value]="i.nome">
-            {{ i.nome }} — {{ i.cidade }}
-          </option>
-        </select>
-      </div>
-      <div>
-        <label>Unidade</label>
-        <input type="text" [(ngModel)]="form.unidade"
-          placeholder="Ex: SEDE, Regional...">
-      </div>
-    </div>
+  <div>
+    <label>Instituição</label>
+    <select [value]="form.instituicao" (change)="onInstituicaoChange($event)">
+      <option value="">Selecione</option>
+      <option *ngFor="let i of instituicoes" [value]="i.nome">
+        {{ i.nome }} — {{ i.cidade }}
+      </option>
+    </select>
+  </div>
+  <div>
+    <label>Unidade</label>
+    <select [(ngModel)]="form.unidade">
+      <option value="">Selecione</option>
+      <option *ngFor="let u of unidades" [value]="u.nome">{{ u.nome }}</option>
+    </select>
+  </div>
+</div>
   </div>
 
   <!-- IDENTIFICAÇÃO DA SOLICITAÇÃO -->
-  <div class="card">
-    <h3>Identificação da Solicitação</h3>
-    <div class="grid-3">
-      
-      <div>
-        <label>Prioridade</label>
-        <select [(ngModel)]="form.prioridade">
-          <option>Baixa</option>
-          <option>Normal</option>
-          <option>Alta</option>
-        </select>
-      </div>
-      <div>
-  <label>Setor Destino</label>
-  <select (change)="onSetorChange($event)">
-    <option value="">Selecione</option>
-    <option *ngFor="let s of setores" [value]="s.nome">{{ s.nome }}</option>
-  </select>
-</div>
-
-<div>
-  <label>Categoria</label>
-  <select (change)="onCategoriaChange($event)">
-    <option value="">Selecione</option>
-    <option *ngFor="let c of categoriasFiltradas" [value]="c.nome">{{ c.nome }}</option>
-  </select>
-</div>
+ <div class="card">
+  <h3>Identificação da Solicitação</h3>
+  <div class="grid-3">
+    <div>
+      <label>Prioridade</label>
+      <select [(ngModel)]="form.prioridade">
+        <option>Baixa</option>
+        <option>Normal</option>
+        <option>Alta</option>
+      </select>
+    </div>
+    <div>
+      <label>Setor Destino</label>
+      <select [value]="form.setor_destino" (change)="onSetorChange($event)">
+        <option value="">Selecione</option>
+        <option *ngFor="let s of setores" [value]="s.nome">{{ s.nome }}</option>
+      </select>
+    </div>
+    <div>
+      <label>Categoria</label>
+      <select [value]="form.categoria" (change)="onCategoriaChange($event)">
+        <option value="">Selecione</option>
+        <option *ngFor="let c of categoriasFiltradas" [value]="c.nome">{{ c.nome }}</option>
+      </select>
     </div>
   </div>
+</div>
 
   <!-- SLA -->
   <div class="card">
