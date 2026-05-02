@@ -99,3 +99,13 @@ button.active {
 .status.pendente { color: #f59e0b; }
 .status.execucao { color: #2563eb; }
 .status.concluido { color: #16a34a; }
+
+.col-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.col-header:hover { color: #2563eb; }

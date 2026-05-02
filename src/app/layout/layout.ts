@@ -23,14 +23,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
     public notificacaoService: NotificacaoService
   ) {}
 
-  ngOnInit() {
-    if (this.usuarioLogado.id) {
-      this.notificacaoService.iniciar(this.usuarioLogado.id);
-    }
-    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
-  this.nomeUsuario = usuario.nome || ''; 
-   this.emailUsuario = usuario.email || '';
+ ngOnInit() {
+  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+  this.usuarioLogado = usuario;
+  this.nomeUsuario = usuario.nome || '';
+  this.emailUsuario = usuario.email || '';
+
+  if (this.usuarioLogado.id) {
+    this.notificacaoService.iniciar(this.usuarioLogado.id);
   }
+}
 
   ngOnDestroy() {
     this.notificacaoService.parar();

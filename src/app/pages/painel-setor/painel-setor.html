@@ -52,13 +52,25 @@
   <div *ngIf="!carregando" class="lista">
 
     <div class="lista-header">
-      <span>Nº</span>
-      <span>Status</span>
-      <span>Instituição</span>
-      <span>Setor</span>
-      <span>Categoria</span>
-      <span>Data</span>
-    </div>
+  <span class="col-header" (click)="ordenarPor('protocolo')">
+    Nº <span *ngIf="ordemCampo==='protocolo'">{{ordemDirecao===1?'▲':'▼'}}</span>
+  </span>
+  <span class="col-header" (click)="ordenarPor('status')">
+    Status <span *ngIf="ordemCampo==='status'">{{ordemDirecao===1?'▲':'▼'}}</span>
+  </span>
+  <span class="col-header" (click)="ordenarPor('instituicao')">
+    Instituição <span *ngIf="ordemCampo==='instituicao'">{{ordemDirecao===1?'▲':'▼'}}</span>
+  </span>
+  <span class="col-header" (click)="ordenarPor('setor_destino')">
+    Setor <span *ngIf="ordemCampo==='setor_destino'">{{ordemDirecao===1?'▲':'▼'}}</span>
+  </span>
+  <span class="col-header" (click)="ordenarPor('categoria')">
+    Categoria <span *ngIf="ordemCampo==='categoria'">{{ordemDirecao===1?'▲':'▼'}}</span>
+  </span>
+  <span class="col-header" (click)="ordenarPor('data_criacao')">
+    Data <span *ngIf="ordemCampo==='data_criacao'">{{ordemDirecao===1?'▲':'▼'}}</span>
+  </span>
+</div>
 
     <div
       class="linha"

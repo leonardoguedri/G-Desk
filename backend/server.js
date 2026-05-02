@@ -44,7 +44,7 @@ function templateEmail(titulo, mensagem, protocolo) {
           <span style="color: #1e3a5f; font-size: 18px; font-weight: bold; margin-left: 8px;">${protocolo}</span>
         </div>
         <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">
-          Acesse o sistema para ver mais detalhes.
+          Enviado por PRODEPA-Empresa de Tecnologia da Informação e Comunicação do Estado do Pará atravéz da GCI - Guedri Codificando o Impossivel, Você está recebendo esse e-mail por ser parceiro da PRODEPA. Por mais informações entre em contato com nossas centrais de atendimento.
         </p>
       </div>
     </div>
@@ -69,6 +69,7 @@ db.serialize(() => {
 
   db.run(`ALTER TABLE usuarios ADD COLUMN setor TEXT`, () => {});
   db.run(`ALTER TABLE usuarios ADD COLUMN ultimo_acesso TEXT`, () => {});
+  db.run(`ALTER TABLE setores ADD COLUMN email TEXT`, () => {});
 
   db.run(`CREATE TABLE IF NOT EXISTS chamados (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -194,23 +195,46 @@ function autenticar(req, res, next) {
     return res.status(401).json({ erro: 'Token inválido' });
   }
 }
+function notificarSetor(chamado_id, tipo, descricao) {
+  db.get(
+    `SELECT c.protocolo, c.titulo, c.setor_destino,
+     s.email as email_setor
+     FROM chamados c
+     LEFT JOIN setores s ON c.setor_destino = s.nome
+     WHERE c.id=?`,
+    [chamado_id],
+    (err, row) => {
+      if (err || !row || !row.email_setor) return;
+      enviarEmail(
+        row.email_setor,
+        `[G-Desk] Movimentação no chamado ${row.protocolo} — ${row.setor_destino}`,
+        templateEmail(
+          `Atualização no chamado do seu setor`,
+          descricao,
+          row.protocolo
+        )
+      );
+    }
+  );
+}
 
 function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuario_id) {
   db.get(
     `SELECT c.id, c.protocolo, c.titulo, c.usuario_id, c.responsavel_id,
-     c.solicitante_email,
+     c.solicitante_email, c.setor_destino,
      u1.email as email_criador, u1.nome as nome_criador,
-     u2.email as email_responsavel, u2.nome as nome_responsavel
+     u2.email as email_responsavel, u2.nome as nome_responsavel,
+     s.email as email_setor
      FROM chamados c
      LEFT JOIN usuarios u1 ON c.usuario_id = u1.id
      LEFT JOIN usuarios u2 ON c.responsavel_id = u2.id
+     LEFT JOIN setores s ON c.setor_destino = s.nome
      WHERE c.id=?`,
     [chamado_id],
     (err, chamado) => {
       if (err || !chamado) return;
       const data = new Date().toLocaleString('pt-BR');
 
-      // Notifica criador
       if (chamado.usuario_id && chamado.usuario_id !== excluir_usuario_id) {
         db.run(
           `INSERT INTO notificacoes_usuario
@@ -219,21 +243,15 @@ function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuar
           [chamado.usuario_id, chamado_id, chamado.protocolo,
            chamado.titulo, tipo, descricao, data]
         );
-
         if (chamado.email_criador) {
           enviarEmail(
             chamado.email_criador,
             `[G-Desk] Atualização no chamado ${chamado.protocolo}`,
-            templateEmail(
-              `Atualização no seu chamado`,
-              descricao,
-              chamado.protocolo
-            )
+            templateEmail(`Atualização no seu chamado`, descricao, chamado.protocolo)
           );
         }
       }
 
-      // Notifica responsável
       if (chamado.responsavel_id &&
           chamado.responsavel_id !== excluir_usuario_id &&
           chamado.responsavel_id !== chamado.usuario_id) {
@@ -244,22 +262,58 @@ function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuar
           [chamado.responsavel_id, chamado_id, chamado.protocolo,
            chamado.titulo, tipo, descricao, data]
         );
-
         if (chamado.email_responsavel) {
           enviarEmail(
             chamado.email_responsavel,
             `[G-Desk] Atualização no chamado ${chamado.protocolo}`,
-            templateEmail(
-              `Atualização em chamado sob sua responsabilidade`,
-              descricao,
-              chamado.protocolo
-            )
+            templateEmail(`Atualização em chamado sob sua responsabilidade`, descricao, chamado.protocolo)
           );
         }
+      }
+
+      // Notifica email do setor
+      if (chamado.email_setor) {
+        enviarEmail(
+          chamado.email_setor,
+          `[G-Desk] Movimentação no chamado ${chamado.protocolo}`,
+          templateEmail(`Movimentação no chamado do setor ${chamado.setor_destino}`, descricao, chamado.protocolo)
+        );
       }
     }
   );
 }
+
+// ENVIAR INFORMATIVO POR EMAIL
+app.post('/informativos/enviar', autenticar, async (req, res) => {
+  const { cidade, instituicao_id, assunto, corpo } = req.body;
+
+  let query = `SELECT DISTINCT s.email FROM solicitantes s
+               INNER JOIN instituicoes i ON s.instituicao = i.nome
+               WHERE s.email IS NOT NULL AND s.email != ''`;
+  const params = [];
+
+  if (instituicao_id) {
+    query += ` AND i.id = ?`;
+    params.push(instituicao_id);
+  } else if (cidade) {
+    query += ` AND i.cidade = ?`;
+    params.push(cidade);
+  }
+
+  db.all(query, params, (err, rows) => {
+    if (err) return res.status(500).json(err);
+    if (rows.length === 0) return res.json({ enviados: 0 });
+
+    const emails = rows.map((r) => r.email).join(',');
+    enviarEmail(
+      emails,
+      assunto,
+      corpo
+    );
+
+    res.json({ enviados: rows.length });
+  });
+});
 
 // Função separada para notificar solicitante apenas na conclusão
 function notificarSolicitante(chamado_id, texto_conclusao) {
@@ -390,12 +444,37 @@ app.post('/chamados', autenticar, (req, res) => {
      criador_nome, setor_abertura, sla_resposta || '', sla_solucao || ''],
     function (err) {
       if (err) return res.status(500).json(err);
+
+      const chamadoId = this.lastID;
+
       db.run(
         `INSERT INTO movimentacoes (chamado_id, usuario_nome, tipo, descricao, data)
          VALUES (?, ?, ?, ?, ?)`,
-        [this.lastID, criador_nome, 'abertura', 'Chamado aberto', data_criacao]
+        [chamadoId, criador_nome, 'abertura', 'Chamado aberto', data_criacao]
       );
-      res.json({ id: this.lastID, protocolo });
+
+      // Notifica email do setor sobre novo chamado
+      if (setor_destino) {
+        db.get(`SELECT email FROM setores WHERE nome=?`, [setor_destino], (err, setor) => {
+          if (!err && setor && setor.email) {
+            enviarEmail(
+              setor.email,
+              `[G-Desk] Novo chamado criado para o setor ${setor_destino} — ${protocolo}`,
+              templateEmail(
+                `Novo chamado criado para o seu setor`,
+                `Um novo chamado foi aberto por <strong>${criador_nome}</strong> para o setor <strong>${setor_destino}</strong>.<br><br>
+                 <strong>Solicitante:</strong> ${solicitante_nome || '-'}<br>
+                 <strong>Categoria:</strong> ${categoria || '-'}<br>
+                 <strong>Prioridade:</strong> ${prioridade || '-'}<br>
+                 <strong>Descrição:</strong> ${descricao || '-'}`,
+                protocolo
+              )
+            );
+          }
+        });
+      }
+
+      res.json({ id: chamadoId, protocolo });
     }
   );
 });
@@ -755,15 +834,17 @@ app.get('/setores', autenticar, (req, res) => {
 });
 
 app.post('/setores', autenticar, (req, res) => {
-  db.run(`INSERT INTO setores (nome) VALUES (?)`, [req.body.nome], function (err) {
+  const { nome, email } = req.body;
+  db.run(`INSERT INTO setores (nome, email) VALUES (?, ?)`, [nome, email || ''], function (err) {
     if (err) return res.status(500).json(err);
     res.json({ id: this.lastID });
   });
 });
 
 app.put('/setores/:id', autenticar, (req, res) => {
-  db.run(`UPDATE setores SET nome=? WHERE id=?`,
-    [req.body.nome, req.params.id],
+  const { nome, email } = req.body;
+  db.run(`UPDATE setores SET nome=?, email=? WHERE id=?`,
+    [nome, email || '', req.params.id],
     function (err) {
       if (err) return res.status(500).json(err);
       res.json({ sucesso: true });

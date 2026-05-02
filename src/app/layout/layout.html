@@ -51,10 +51,11 @@
   <span> Solicitantes</span>
 </a>
 
-      <a routerLink="/configuracoes" routerLinkActive="active">
-        <i class="fa-solid fa-gear"></i>
-        <span>Configurações</span>
-      </a>
+      <a routerLink="/configuracoes" routerLinkActive="active"
+  *ngIf="usuarioLogado?.perfil === 'admin'">
+  <i class="fa-solid fa-gear"></i>
+  <span>Configurações</span>
+</a>
 
     </nav>
 
@@ -142,5 +143,7 @@
     </main>
 
   </div>
+
+ 
 
 </div>

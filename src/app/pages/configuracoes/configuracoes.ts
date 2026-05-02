@@ -24,13 +24,13 @@ export class ConfiguracoesComponent implements OnInit {
   unidadesFiltradas: any[] = [];
 
   novoUsuario = { nome: '', email: '', senha: '', perfil: 'user', setor: '' };
-  novoSetor = { nome: '' };
+  novoSetor = { nome: '', email: '' };
   novaInstituicao = { nome: '', cidade: '' };
   novaCategoria = { nome: '', sla_resposta: '', sla_solucao: '', setor_id: '' };
   novaUnidade = { nome: '', instituicao_id: '' };
 
   editandoUsuario: any = null;
-  editandoSetor: any = null;
+editandoSetor: any = null;
   editandoInstituicao: any = null;
   editandoCategoria: any = null;
   editandoUnidade: any = null;
@@ -122,23 +122,24 @@ export class ConfiguracoesComponent implements OnInit {
   }
 
   // SETORES
-  async criarSetor() {
-    if (!this.novoSetor.nome) return;
-    await this.api.post('/setores', this.novoSetor);
-    this.novoSetor = { nome: '' };
-    await this.carregarSetores();
-    this.cdr.detectChanges();
-  }
+ async criarSetor() {
+  if (!this.novoSetor.nome) return;
+  await this.api.post('/setores', this.novoSetor);
+  this.novoSetor = { nome: '', email: '' };
+  await this.carregarSetores();
+  this.cdr.detectChanges();
+}
 
-  editarSetor(s: any) { this.editandoSetor = { ...s }; }
+editarSetor(s: any) { this.editandoSetor = { ...s }; }
 
-  async salvarSetor() {
-    if (!this.editandoSetor) return;
-    await this.api.put(`/setores/${this.editandoSetor.id}`, this.editandoSetor);
-    this.editandoSetor = null;
-    await this.carregarSetores();
-    this.cdr.detectChanges();
-  }
+async salvarSetor() {
+  if (!this.editandoSetor) return;
+  await this.api.put(`/setores/${this.editandoSetor.id}`, this.editandoSetor);
+  this.editandoSetor = null;
+  await this.carregarSetores();
+  this.cdr.detectChanges();
+}
+
 
   async deletarSetor(id: number) {
     await this.api.delete(`/setores/${id}`);

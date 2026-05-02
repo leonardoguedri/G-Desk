@@ -61,37 +61,44 @@
   </div>
 
   <!-- SETORES -->
-  <div *ngIf="abaAtiva === 'setores'" class="card">
-    <h3>Setores</h3>
-    <div class="form-inline">
-      <input placeholder="Nome do setor" [(ngModel)]="novoSetor.nome">
-      <button class="btn-add" (click)="criarSetor()">+ Adicionar</button>
-    </div>
+ <div *ngIf="abaAtiva === 'setores'" class="card">
+  <h3>Setores</h3>
+  <div class="form-inline">
+    <input placeholder="Nome do setor" [(ngModel)]="novoSetor.nome">
+    <input placeholder="Email do setor" [(ngModel)]="novoSetor.email" type="email">
+    <button class="btn-add" (click)="criarSetor()">+ Adicionar</button>
+  </div>
 
-    <div class="modal-backdrop" *ngIf="editandoSetor">
-      <div class="modal">
-        <h4>Editar Setor</h4>
-        <label>Nome</label><input [(ngModel)]="editandoSetor.nome">
-        <div class="modal-acoes">
-          <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
-          <button class="btn-salvar" (click)="salvarSetor()">Salvar</button>
-        </div>
+  <div class="modal-backdrop" *ngIf="editandoSetor">
+    <div class="modal">
+      <h4>Editar Setor</h4>
+      <label>Nome</label>
+      <input [(ngModel)]="editandoSetor.nome">
+      <label>Email do Setor</label>
+      <input type="email" [(ngModel)]="editandoSetor.email" placeholder="setor@empresa.com">
+      <div class="modal-acoes">
+        <button class="btn-cancelar" (click)="cancelarEdicao()">Cancelar</button>
+        <button class="btn-salvar" (click)="salvarSetor()">Salvar</button>
       </div>
     </div>
-
-    <table>
-      <thead><tr><th>Nome</th><th>Ações</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let s of setores">
-          <td>{{ s.nome }}</td>
-          <td>
-            <button class="btn-edit" (click)="editarSetor(s)">Editar</button>
-            <button class="btn-del" (click)="deletarSetor(s.id)">Excluir</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
+
+  <table>
+    <thead>
+      <tr><th>Nome</th><th>Email</th><th>Ações</th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let s of setores">
+        <td>{{ s.nome }}</td>
+        <td>{{ s.email || '-' }}</td>
+        <td>
+          <button class="btn-edit" (click)="editarSetor(s)">Editar</button>
+          <button class="btn-del" (click)="deletarSetor(s.id)">Excluir</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
   <!-- INSTITUIÇÕES -->
   <div *ngIf="abaAtiva === 'instituicoes'" class="card">

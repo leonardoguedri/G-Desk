@@ -12,8 +12,9 @@ interface Chamado {
   categoria: string;
   responsavel_id: number;
   status: string;
-  data_criacao: string;
+  data_criacao: string;  
 }
+
 
 @Component({
   selector: 'app-painel-setor',
@@ -58,14 +59,39 @@ export class PainelSetorComponent implements OnInit {
     }
   }
 
-  get chamadosFiltrados() {
-    return this.chamados.filter(c => {
-      if (this.filtro === 'entrada') return c.status === 'Pendente';
-      if (this.filtro === 'meus') return c.responsavel_id === this.usuarioLogado.id;
-      if (this.filtro === 'todos') return true;
-      return true;
+get chamadosFiltrados() {
+  const statusOrdem: any = { 'Pendente': 1, 'Em Execução': 2, 'Concluído': 3 };
+
+  let lista = this.chamados.filter(c => {
+    if (this.filtro === 'entrada') return c.status === 'Pendente';
+    if (this.filtro === 'meus') return c.responsavel_id === this.usuarioLogado.id;
+    return true;
+  });
+
+  if (this.ordemCampo) {
+    lista = [...lista].sort((a: any, b: any) => {
+      let va = a[this.ordemCampo] || '';
+      let vb = b[this.ordemCampo] || '';
+
+      if (this.ordemCampo === 'status') {
+        return ((statusOrdem[va] || 0) - (statusOrdem[vb] || 0)) * this.ordemDirecao;
+      }
+
+      if (this.ordemCampo === 'data_criacao') {
+        const toDate = (d: string) => {
+          if (!d) return 0;
+          const p = d.split('/');
+          return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();
+        };
+        return (toDate(va) - toDate(vb)) * this.ordemDirecao;
+      }
+
+      return va.toString().localeCompare(vb.toString()) * this.ordemDirecao;
     });
   }
+
+  return lista;
+}
 
   get total() { return this.chamados.length; }
   get pendentes() { return this.chamados.filter(c => c.status === 'Pendente').length; }
@@ -113,4 +139,19 @@ export class PainelSetorComponent implements OnInit {
     link.download = 'painel-setor.csv';
     link.click();
   }
+
+ordemCampo = '';
+ordemDirecao = 1;
+
+ordenarPor(campo: string) {
+  if (this.ordemCampo === campo) {
+    this.ordemDirecao *= -1;
+  } else {
+    this.ordemCampo = campo;
+    this.ordemDirecao = 1;
+  }
+  this.cdr.detectChanges();
+}
+
+  
 }

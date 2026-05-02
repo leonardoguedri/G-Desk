@@ -52,6 +52,8 @@ export class DashboardComponent implements OnInit {
   valorFiltroTemp = '';
   dataInicioTemp = '';
   dataFimTemp = '';
+  ordemCampo = '';
+  ordemDirecao = 1;
 
   opcoesFiltro = [
     { campo: 'protocolo', label: 'Número de Protocolo', tipo: 'texto' },
@@ -174,14 +176,41 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  get chamadosFiltrados() {
-    return this.chamados.filter(c => {
-      if (this.filtroAba === 'pendente') return c.status === 'Pendente';
-      if (this.filtroAba === 'execucao') return c.status === 'Em Execução';
-      if (this.filtroAba === 'concluido') return c.status === 'Concluído';
-      return true;
+ get chamadosFiltrados() {
+  let lista = this.chamados.filter(c => {
+    if (this.filtroAba === 'pendente') return c.status === 'Pendente';
+    if (this.filtroAba === 'execucao') return c.status === 'Em Execução';
+    if (this.filtroAba === 'concluido') return c.status === 'Concluído';
+    return true;
+  });
+
+  if (this.ordemCampo) {
+    const statusOrdem: any = { 'Pendente': 1, 'Em Execução': 2, 'Concluído': 3 };
+    lista = [...lista].sort((a: any, b: any) => {
+      let va = a[this.ordemCampo] || '';
+      let vb = b[this.ordemCampo] || '';
+
+      if (this.ordemCampo === 'status') {
+        va = statusOrdem[va] || 0;
+        vb = statusOrdem[vb] || 0;
+        return (va - vb) * this.ordemDirecao;
+      }
+
+      if (this.ordemCampo === 'data_criacao') {
+        const toDate = (d: string) => {
+          if (!d) return 0;
+          const p = d.split('/');
+          return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();
+        };
+        return (toDate(va) - toDate(vb)) * this.ordemDirecao;
+      }
+
+      return va.toString().localeCompare(vb.toString()) * this.ordemDirecao;
     });
   }
+
+  return lista;
+}
 
   get totalPaginas() {
     return Math.ceil(this.chamadosFiltrados.length / this.itensPorPagina);
@@ -249,4 +278,15 @@ export class DashboardComponent implements OnInit {
     link.download = 'chamados.csv';
     link.click();
   }
+
+  ordenarPor(campo: string) {
+  if (this.ordemCampo === campo) {
+    this.ordemDirecao *= -1;
+  } else {
+    this.ordemCampo = campo;
+    this.ordemDirecao = 1;
+  }
+  this.cdr.detectChanges();
+}
+
 }
