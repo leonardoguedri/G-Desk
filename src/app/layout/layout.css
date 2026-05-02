@@ -2,6 +2,7 @@
 .layout-container {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
 /* SIDEBAR */
@@ -12,14 +13,52 @@
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  overflow-y: auto;
 }
 
-/* MINIMIZADA */
-.sidebar.minimized {
-  width: 60px;
+.sidebar.minimized { width: 60px; }
+
+/* MAIN — empurra para direita da sidebar */
+.main-content {
+  margin-left: 220px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  transition: margin-left 0.3s ease;
 }
 
-/* HEADER (LOGO + TEXTO) */
+.sidebar.minimized ~ .main-content {
+  margin-left: 60px;
+}
+
+.header {
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* CONTEÚDO COM SCROLL */
+.content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* SIDEBAR HEADER */
 .sidebar-header {
   padding: 15px 12px;
   display: flex;
@@ -27,31 +66,12 @@
   gap: 10px;
 }
 
-/* LOGO */
-.logo-img {
-  width: 35px;
-  height: 35px;
-  object-fit: contain;
-}
+.logo-img { width: 35px; height: 35px; object-fit: contain; }
 
-/* TEXTO LOGO */
-.logo-text {
-  display: flex;
-  flex-direction: column;
-}
+.logo-text { display: flex; flex-direction: column; }
+.logo-title { font-size: 14px; font-weight: bold; color: #fff; }
+.logo-subtitle { font-size: 11px; color: #9ca3af; }
 
-.logo-title {
-  font-size: 14px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.logo-subtitle {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-/* DIVISOR */
 .divider {
   width: 100%;
   height: 1px;
@@ -59,12 +79,7 @@
   margin: 10px 0;
 }
 
-/* BOTÃO MENU */
-.menu-toggle {
-  display: flex;
-  padding: 10px;
-}
-
+.menu-toggle { display: flex; padding: 10px; }
 .menu-toggle button {
   background: none;
   border: none;
@@ -73,7 +88,6 @@
   cursor: pointer;
 }
 
-/* TITULO MENU */
 .menu-title {
   font-size: 9px;
   color: #6b7280;
@@ -81,7 +95,6 @@
   text-transform: uppercase;
 }
 
-/* MENU */
 .menu {
   display: flex;
   flex-direction: column;
@@ -89,7 +102,6 @@
   gap: 6px;
 }
 
-/* LINKS */
 .menu a {
   display: flex;
   align-items: center;
@@ -98,38 +110,43 @@
   color: white;
   text-decoration: none;
   transition: background 0.2s;
-  gap: 12px; /* Espaço entre ícone e texto */
+  gap: 12px;
 }
 
+.menu a:hover { background: #1f2937; }
+.menu a.active { background: #1b2538; }
+.menu span { transition: opacity 0.2s; }
 
-
-
-/* HOVER */
-.menu a:hover {
-  background: #1f2937;
-}
-
-/* ATIVO */
-.menu a.active {
-  background: #1b2538;
-}
-
-/* TEXTO */
-.menu span {
-  transition: opacity 0.2s;
-}
-
-/* ESCONDER TEXTO AO MINIMIZAR */
 .sidebar.minimized .menu span,
 .sidebar.minimized .logo-text,
-.sidebar.minimized .menu-title {
-  display: none;
-}
+.sidebar.minimized .menu-title { display: none; }
 
-/* RODAPÉ */
 .sidebar-footer {
   margin-top: auto;
-  padding: 10px;
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar.minimized .sidebar-footer h6 { display: none; }
+
+.sidebar-footer h6 {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  line-height: 1.2;
+}
+
+.sidebar-footer h6:first-child {
+  font-weight: 600;
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 0px;
+}
+
+.sidebar-footer h6:last-of-type {
+  font-weight: 400;
+  font-size: 10px;
+  color: #5f6570;
+  margin-bottom: 12px;
 }
 
 .logout-btn {
@@ -140,85 +157,20 @@
   color: white;
   cursor: pointer;
   border-radius: 6px;
-  display: flex;       /* Alinha ícone e texto em linha */
-  align-items: center; /* Centraliza verticalmente */
-  gap: 12px;           /* Espaçamento entre o ícone e a palavra Sair */
+  display: flex;
+  align-items: center;
+  gap: 12px;
   transition: background 0.2s;
-  font-family: inherit; /* Garante que a fonte seja a mesma do resto */
+  font-family: inherit;
   font-size: 14px;
 }
 
-.logout-btn i {
-  font-size: 13px;     /* Tamanho do ícone de logout */
-  min-width: 24px;     /* Mesma largura dos ícones do menu para manter o padrão */
-  display: flex;
-  justify-content: center;
-}
+.logout-btn i { font-size: 13px; min-width: 24px; display: flex; justify-content: center; }
+.logout-btn:hover { background: #1f2937; color: white; }
+.sidebar.minimized .logout-btn span { display: none; }
+.sidebar.minimized .logout-btn { justify-content: center; padding: 12px 0; }
 
-.logout-btn:hover {
-  background: #1f2937; /* Dica: um tom de vermelho combina com 'Sair' */
-  color: white;
-}
-
-/* --- AJUSTE PARA SIDEBAR MINIMIZADA --- */
-
-/* Esconde o texto "Sair" quando a classe .minimized estiver ativa */
-.sidebar.minimized .logout-btn span {
-  display: none;
-}
-
-/* Centraliza o ícone de logout quando a sidebar estiver estreita */
-.sidebar.minimized .logout-btn {
-  justify-content: center;
-  padding: 12px 0;
-}
-/* MAIN */
-.main-content {
-  flex: 1;
-  background: #f3f4f6;
-}
-
-.header {
-  padding: 16px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.content {
-  padding: 16px;
-}
-.sidebar.minimized .sidebar-footer h6 {
-  display: none;
-}
-
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1); /* linha em cima */
-}
-
-.sidebar-footer h6 {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  line-height: 1.2;
-  
-}
-
-/* Nome */
-.sidebar-footer h6:first-child {
-  font-weight: 600;
-  font-size: 10px;
-  color: #ffffff;
-  margin-bottom: 0px; /* espaço pequeno entre nome e email */
-}
-
-.sidebar-footer h6:last-of-type {
-  font-weight: 400;
-  font-size: 10px;
-  color: #5f6570;
-  margin-bottom: 12px;
-}
-
-/* notificação*/
+/* HEADER ACOES */
 .header-acoes {
   display: flex;
   align-items: center;
@@ -228,11 +180,10 @@
 .usuario-nome {
   font-size: 12px;
   color: #374151;
-  margin-left: -15px; /* puxa pra esquerda */}
-
-.notificacao-wrapper {
-  position: relative;
+  margin-left: -15px;
 }
+
+.notificacao-wrapper { position: relative; }
 
 .btn-notificacao {
   background: none;
@@ -260,15 +211,19 @@
 
 .notificacao-dropdown {
   position: absolute;
-  left: 0; /* muda de right para left */
+  right: 0;
+  left: auto;
   top: 36px;
-  width: 300px;
+  width: 320px;
   background: white;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   padding: 16px;
-  z-index: 100;
+  z-index: 200;
+  max-height: 400px;
+  overflow-y: auto;
 }
+
 .notificacao-dropdown h4 {
   font-size: 13px;
   margin-bottom: 12px;
@@ -278,27 +233,15 @@
 .notificacao-item {
   padding: 8px 0;
   border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
 }
 
-.notificacao-item strong {
-  font-size: 13px;
-  color: #2563eb;
-}
+.notificacao-item:hover { background: #f9fafb; }
+.notificacao-item strong { font-size: 13px; color: #2563eb; }
+.notificacao-item p { font-size: 12px; margin: 2px 0; }
+.notificacao-item small { color: #9ca3af; font-size: 11px; }
 
-.notificacao-item p {
-  font-size: 12px;
-  margin: 2px 0;
-}
-
-.notificacao-item small {
-  color: #9ca3af;
-  font-size: 11px;
-}
-/* nova notificação */
-
-.notif-secao {
-  margin-bottom: 12px;
-}
+.notif-secao { margin-bottom: 12px; }
 
 .notif-secao-header {
   display: flex;

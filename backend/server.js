@@ -287,9 +287,9 @@ function notificarCriadorEResponsavel(chamado_id, tipo, descricao, excluir_usuar
 app.post('/informativos/enviar', autenticar, async (req, res) => {
   const { cidade, instituicao_id, assunto, corpo } = req.body;
 
-  let query = `SELECT DISTINCT s.email FROM solicitantes s
+  let query = `SELECT DISTINCT s.nome, s.email FROM solicitantes s
                INNER JOIN instituicoes i ON s.instituicao = i.nome
-               WHERE s.email IS NOT NULL AND s.email != ''`;
+               WHERE 1=1`;
   const params = [];
 
   if (instituicao_id) {
@@ -302,16 +302,20 @@ app.post('/informativos/enviar', autenticar, async (req, res) => {
 
   db.all(query, params, (err, rows) => {
     if (err) return res.status(500).json(err);
-    if (rows.length === 0) return res.json({ enviados: 0 });
+    if (rows.length === 0) return res.json({ enviados: 0, naoEnviados: 0, semEmail: [] });
 
-    const emails = rows.map((r) => r.email).join(',');
-    enviarEmail(
-      emails,
-      assunto,
-      corpo
-    );
+    const comEmail = rows.filter(r => r.email && r.email.trim() !== '');
+    const semEmail = rows.filter(r => !r.email || r.email.trim() === '').map(r => r.nome);
 
-    res.json({ enviados: rows.length });
+    comEmail.forEach(r => {
+      enviarEmail(r.email, assunto, corpo);
+    });
+
+    res.json({
+      enviados: comEmail.length,
+      naoEnviados: semEmail.length,
+      semEmail: semEmail
+    });
   });
 });
 
@@ -426,7 +430,7 @@ app.post('/chamados', autenticar, (req, res) => {
     sla_resposta, sla_solucao
   } = req.body;
 
-  const protocolo = `${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
+  const protocolo = req.body.protocolo || `${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
   const data_criacao = new Date().toLocaleDateString('pt-BR');
   const criador_nome = req.usuario.nome;
   const setor_abertura = req.usuario.setor || '-';

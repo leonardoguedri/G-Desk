@@ -44,6 +44,13 @@ export class CriarChamadoComponent implements OnInit {
   loading = false;
   sucesso = false;
   erro = '';
+  protocoloPreview = '';
+
+gerarProtocolo(): string {
+  const ano = new Date().getFullYear();
+  const rand = Math.floor(Math.random() * 9000000 + 1000000);
+  return `${ano}${rand}`;
+}
 
   constructor(
     private router: Router,
@@ -52,14 +59,15 @@ export class CriarChamadoComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    await Promise.all([
-      this.carregarSetores(),
-      this.carregarInstituicoes(),
-      this.carregarCategorias()
-    ]);
-    this.categoriasFiltradas = this.categorias;
-    this.cdr.detectChanges();
-  }
+  this.protocoloPreview = this.gerarProtocolo();
+  await Promise.all([
+    this.carregarSetores(),
+    this.carregarInstituicoes(),
+    this.carregarCategorias()
+  ]);
+  this.categoriasFiltradas = this.categorias;
+  this.cdr.detectChanges();
+}
 
   async carregarSetores() {
     this.setores = await this.api.get('/setores');
@@ -162,56 +170,55 @@ onCategoriaChange(event: Event) {
   }
 
   async abrirChamado() {
-    if (!this.form.titulo || !this.form.descricao) {
-      this.erro = 'Título e descrição são obrigatórios.';
-      return;
-    }
-
-    this.loading = true;
-    this.erro = '';
-
-    try {
-      // Salva solicitante automaticamente se não existir
-      if (this.form.solicitante_nome.trim()) {
-        const existentes = await this.api.get(
-          `/solicitantes?busca=${encodeURIComponent(this.form.solicitante_nome)}`
-        );
-        const jaExiste = existentes.find(
-          (s: any) => s.nome.toLowerCase() === this.form.solicitante_nome.toLowerCase()
-        );
-
-        if (!jaExiste) {
-          await this.api.post('/solicitantes', {
-            nome: this.form.solicitante_nome,
-            email: this.form.solicitante_email,
-            telefone: this.form.solicitante_telefone,
-            instituicao: this.form.instituicao,
-            unidade: this.form.unidade,
-            observacoes: ''
-          });
-        }
-      }
-
-      const resultado = await this.api.post('/chamados', {
-        ...this.form,
-        sla_resposta: this.sla.resposta,
-        sla_solucao: this.sla.solucao,
-        usuario_id: this.usuarioLogado.id
-      });
-
-      if (resultado.id) {
-        this.sucesso = true;
-        setTimeout(() => this.router.navigate(['/dashboard']), 2000);
-      } else {
-        this.erro = 'Erro ao criar chamado.';
-      }
-    } catch (e) {
-      this.erro = 'Erro de conexão com o servidor.';
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
+  if (!this.form.titulo || !this.form.descricao) {
+    this.erro = 'Título e descrição são obrigatórios.';
+    return;
   }
+
+  this.loading = true;
+  this.erro = '';
+
+  try {
+    if (this.form.solicitante_nome.trim()) {
+      const existentes = await this.api.get(
+        `/solicitantes?busca=${encodeURIComponent(this.form.solicitante_nome)}`
+      );
+      const jaExiste = existentes.find(
+        (s: any) => s.nome.toLowerCase() === this.form.solicitante_nome.toLowerCase()
+      );
+      if (!jaExiste) {
+        await this.api.post('/solicitantes', {
+          nome: this.form.solicitante_nome,
+          email: this.form.solicitante_email,
+          telefone: this.form.solicitante_telefone,
+          instituicao: this.form.instituicao,
+          unidade: this.form.unidade,
+          observacoes: ''
+        });
+      }
+    }
+
+    const resultado = await this.api.post('/chamados', {
+  ...this.form,
+  protocolo: this.protocoloPreview,
+  sla_resposta: this.sla.resposta,
+  sla_solucao: this.sla.solucao,
+  usuario_id: this.usuarioLogado.id
+});
+
+    if (resultado.id) {
+      // Redireciona para o detalhe do chamado criado
+      this.router.navigate(['/chamado', resultado.id]);
+    } else {
+      this.erro = 'Erro ao criar chamado.';
+    }
+  } catch (e) {
+    this.erro = 'Erro de conexão com o servidor.';
+  } finally {
+    this.loading = false;
+    this.cdr.detectChanges();
+  }
+}
   unidades: any[] = [];
 
 async onInstituicaoChange(event: Event) {

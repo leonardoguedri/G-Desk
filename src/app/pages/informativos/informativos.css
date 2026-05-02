@@ -1,9 +1,9 @@
 .container {
   display: flex;
   gap: 30px;
+  padding: 24px;
 }
 
-/* FORM */
 .formulario {
   width: 40%;
   display: flex;
@@ -15,11 +15,11 @@ input, select, textarea {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
 }
 
-textarea {
-  min-height: 120px;
-}
+textarea { min-height: 120px; resize: vertical; }
 
 button {
   background: #2563eb;
@@ -28,18 +28,23 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
 }
 
-button:hover {
-  background: #1d4ed8;
+button:hover { background: #1d4ed8; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.alerta {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
 }
 
-/* PREVIEW */
-.preview {
-  width: 60%;
-}
+.alerta.sucesso { background: #f0fdf4; color: #065f46; border: 1px solid #bbf7d0; }
+.alerta.erro { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-/* EMAIL */
+.preview { width: 60%; }
+
 .email {
   background: #f3f4f6;
   padding: 20px;
@@ -48,7 +53,6 @@ button:hover {
 
 .header {
   background: #022689;
-  color: white;
   padding: 15px;
   border-radius: 6px 6px 0 0;
 }
@@ -58,19 +62,9 @@ button:hover {
   padding: 20px;
 }
 
-.body h3 {
-  margin-bottom: 10px;
-}
-
-.data {
-  font-size: 12px;
-  color: gray;
-}
-
-.mensagem {
-  margin-top: 15px;
-  line-height: 1.5;
-}
+.body h3 { margin-bottom: 10px; }
+.data { font-size: 12px; color: gray; }
+.mensagem { margin-top: 15px; line-height: 1.5; }
 
 .footer {
   background: #e5e7eb;
@@ -85,4 +79,45 @@ button:hover {
   object-fit: contain;
   display: block;
   margin: 0 auto;
+}
+.resultado-envio {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resultado-item {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.resultado-item.sucesso {
+  background: #f0fdf4;
+  color: #065f46;
+  border: 1px solid #bbf7d0;
+}
+
+.resultado-item.aviso {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.resultado-item ul {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  font-size: 12px;
+}
+
+.alerta {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.alerta.erro {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }

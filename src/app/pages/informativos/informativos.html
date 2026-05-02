@@ -5,73 +5,69 @@
 
     <h2>📢 Enviar Informativo</h2>
 
-    <!-- DESTINO -->
     <select [(ngModel)]="regiaoSelecionada" (change)="onRegiaoChange()">
-      <option value="">Região</option>
-      <option *ngFor="let r of regioes" [value]="r">{{r}}</option>
+      <option value="">Todos os clientes</option>
+      <option *ngFor="let r of regioes" [value]="r">{{ r }}</option>
     </select>
 
     <select *ngIf="mostrarClientes"
-            [(ngModel)]="clienteSelecionado"
-            (change)="onClienteChange()">
-      <option value="">Todos os clientes</option>
-      <option *ngFor="let c of clientes" [value]="c">{{c}}</option>
+      [(ngModel)]="clienteSelecionado"
+      (change)="onClienteChange()">
+      <option value="">Todas as instituições</option>
+      <option *ngFor="let c of clientes" [value]="c.nome">{{ c.nome }}</option>
     </select>
 
-    <select *ngIf="mostrarSetores"
-            [(ngModel)]="setorSelecionado">
-      <option value="">Todos os setores</option>
-      <option *ngFor="let s of setoresProdepa" [value]="s">{{s}}</option>
-    </select>
-
-    <!-- CONTEÚDO -->
     <input type="text" placeholder="Assunto" [(ngModel)]="assunto">
-
     <input type="text" placeholder="Título do informativo" [(ngModel)]="titulo">
+    <textarea placeholder="Mensagem..." [(ngModel)]="mensagem"></textarea>
 
-    <textarea placeholder="Mensagem..."
-              [(ngModel)]="mensagem"></textarea>
+    <!-- RESULTADO DO ENVIO -->
+    <div class="resultado-envio" *ngIf="resultadoEnvio">
+      <div class="resultado-item sucesso" *ngIf="resultadoEnvio.enviados > 0">
+        ✅ Enviado para <strong>{{ resultadoEnvio.enviados }}</strong> destinatário(s).
+      </div>
+      <div class="resultado-item aviso" *ngIf="resultadoEnvio.naoEnviados > 0">
+        ⚠️ <strong>{{ resultadoEnvio.naoEnviados }}</strong> solicitante(s) sem email cadastrado:
+        <ul>
+          <li *ngFor="let nome of resultadoEnvio.semEmail">{{ nome }}</li>
+        </ul>
+      </div>
+      <div class="resultado-item sucesso" *ngIf="resultadoEnvio.enviados === 0 && resultadoEnvio.naoEnviados === 0">
+        ℹ️ Nenhum destinatário encontrado.
+      </div>
+    </div>
 
-    <button (click)="enviar()">Enviar</button>
+    <div class="alerta erro" *ngIf="erro">❌ {{ erro }}</div>
+
+    <button (click)="enviar()" [disabled]="enviando">
+      {{ enviando ? 'Enviando...' : 'Enviar' }}
+    </button>
 
   </div>
 
   <!-- PREVIEW -->
   <div class="preview">
-
     <div class="email">
 
       <div class="header">
-       
-
-         <img
-        src="/images/prodep.jpg"
-        alt="GUEDRI"
-        class="logo-img"
-      />
+        <img src="/images/prodep.jpg" alt="PRODEPA" class="logo-img"/>
       </div>
 
       <div class="body">
-
-        <h3>{{titulo || 'Título do informativo'}}</h3>
-
-        <p class="data">
-          {{dataAtual | date:'dd/MM/yyyy'}}
+        <h3>{{ titulo || 'Título do informativo' }}</h3>
+        <p class="data">{{ dataAtual | date:'dd/MM/yyyy' }}</p>
+        <p class="mensagem"
+          [innerHTML]="mensagem ? mensagem.replace(/\n/g, '&lt;br&gt;') : 'Sua mensagem aparecerá aqui...'">
         </p>
-
-        <p class="mensagem">
-          {{mensagem || 'Sua mensagem aparecerá aqui...'}}
-        </p>
-
       </div>
 
       <div class="footer">
-        Enviado por PRODEPA-Empresa de Tecnologia da Informação e Comunicação do Estado do Pará atravéz da GCI - Guedri Codificando o Impossivel,
-Você está recebendo esse e-mail por ser parceiro da PRODEPA. Por mais informações entre em contato com nossas centrais de atendimento. 
+        Enviado por PRODEPA-Empresa de Tecnologia da Informação e Comunicação do Estado do Pará
+        atravéz da GCI - Guedri Codificando o Impossivel, Você está recebendo esse e-mail por ser
+        parceiro da PRODEPA. Por mais informações entre em contato com nossas centrais de atendimento.
       </div>
 
     </div>
-
   </div>
 
 </div>
